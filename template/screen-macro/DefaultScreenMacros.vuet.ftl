@@ -436,7 +436,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     </#if>
 </#macro>
 <#macro "field-group">
-    <#assign fgTitle = ec.getL10n().localize(.node["@title"]!)!>
+    <#assign fgTitle = ec.getResource().expand(.node["@title"]!"", "")!>
     <#if isAccordion!false>
         <#assign accIsActive = accordionIndex?string == accordionActive>
         <div class="panel panel-default">
