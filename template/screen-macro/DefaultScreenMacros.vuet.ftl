@@ -1590,7 +1590,7 @@ a => A, d => D, y => Y
                         if (!label || !label.length) label = defaultText;
                         if (!value || !value.length) value = defaultText;
                         $('#${dispFieldId}_display').html(label);
-                        <#if dispHidden>$('#${dispFieldId}').val(value);</#if>
+                        <#if dispHidden>$('#${dispFieldId}').val(value);$('#${dispFieldId}').change()</#if>
                     }});
             }
             <#list depNodeList as depNode>
