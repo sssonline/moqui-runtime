@@ -13,9 +13,18 @@
  */
 
 import java.nio.charset.StandardCharsets
-plugins {
-    id "com.eriwen.gradle.js" version "2.14.1"
+//plugins {
+//    id "com.eriwen.gradle.js" version "2.14.1"
+//}
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "http://jcenter.bintray.com" } // backup in case https://jcenter.bintray.com does not work via jcenter
+        maven { url "http://plugins.gradle.org/m2/" }
+    }
+    dependencies { classpath "com.eriwen:gradle-js-plugin:2.14.1" }
 }
+apply plugin: "com.eriwen.gradle.js"
 
 def webrootPath = "screen/webroot"
 def libsPath = webrootPath + "/libs"
