@@ -7,6 +7,14 @@
 
     <server-stats stats-skip-condition="pathInfo?.startsWith('/rpc') || pathInfo?.startsWith('/rest') || pathInfo?.startsWith('/status')"/>
 
+    <artifact-execution-facade>
+        <!-- turn off tarpit until a means can be found to temporarily disable for single screens -->
+        <!-- i.e. in the case of generating checks -->
+        <artifact-execution type="AT_XML_SCREEN" tarpit-enabled="false"/>
+        <artifact-execution type="AT_XML_SCREEN_TRANS" tarpit-enabled="false"/>
+        <artifact-execution type="AT_SERVICE" tarpit-enabled="false"/>
+    </artifact-execution-facade>
+
     <!-- NOTE: using the environment variable is relatively secure in a container environment, but for more security set it here instead -->
     <entity-facade crypt-pass="${entity_ds_crypt_pass}" query-stats="true">
         <!-- add datasource elements here to configure databases -->
