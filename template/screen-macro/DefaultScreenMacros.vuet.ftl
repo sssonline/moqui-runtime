@@ -866,6 +866,28 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             </form>
         </container-dialog>
     </#if>
+    <#if formNode["@show-xlsx-button"]! == "true">
+        <#assign showXlsxDialogId = formId + "_XlsxDialog">
+        <#assign xlsxLinkUrl = sri.getScreenUrlInstance()>
+        <#assign xlsxLinkUrlParms = xlsxLinkUrl.getParameterMap()>
+        <container-dialog id="${showXlsxDialogId}" encode="true" title="${ec.getL10n().localize("Generate Spreadsheet")}">
+            <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
+            <form id="${formId}_Xlsx" method="post" action="${ec.web.getWebappRootUrl(false, null)}/poi${xlsxLinkUrl.getPath()}">
+                <input type="hidden" name="pageNoLimit" value="true">
+                <#list xlsxLinkUrlParms.keySet() as parmName>
+                    <input type="hidden" name="${parmName}" value="${xlsxLinkUrlParms.get(parmName)!?html}"></#list>
+                <fieldset class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Xlsx_saveFilename">${ec.getL10n().localize("Save to Filename")}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Xlsx_saveFilename" value="${formNode["@name"] + ".xlsx"}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-default">${ec.getL10n().localize("Generate Spreadsheet")}</button>
+                </fieldset>
+            </form>
+        </container-dialog>
+    </#if>
 </#macro>
 <#macro paginationHeader formListInfo formId isHeaderDialog>
     <#assign formNode = formListInfo.getFormNode()>
@@ -934,6 +956,10 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#if formNode["@show-pdf-button"]! == "true">
                 <#assign showPdfDialogId = formId + "_PdfDialog">
                 <button id="${showPdfDialogId}_button" type="button" data-toggle="modal" data-target="#${showPdfDialogId}" data-original-title="${ec.getL10n().localize("PDF")}" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> ${ec.getL10n().localize("PDF")}</button>
+            </#if>
+            <#if formNode["@show-xlsx-button"]! == "true">
+                <#assign showXlsxDialogId = formId + "_XlsxDialog">
+                <button id="${showXlsxDialogId}_button" type="button" data-toggle="modal" data-target="#${showXlsxDialogId}" data-original-title="${ec.getL10n().localize("XLSX")}" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> ${ec.getL10n().localize("XLSX")}</button>
             </#if>
         </nav>
         </th></tr>
@@ -1012,7 +1038,8 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#t> :header-dialog="${isHeaderDialog?c}" :saved-finds="${(formNode["@saved-finds"]! == "true")?c}"
             <#t> :select-columns="${(formNode["@select-columns"]! == "true")?c}" :all-button="${(formNode["@show-all-button"]! == "true")?c}"
             <#t> :csv-button="${(formNode["@show-csv-button"]! == "true")?c}" :text-button="${(formNode["@show-text-button"]! == "true")?c}"
-            <#lt> :pdf-button="${(formNode["@show-pdf-button"]! == "true")?c}" columns="${numColumns}">
+            <#t> :pdf-button="${(formNode["@show-pdf-button"]! == "true")?c}">
+            <#lt> :xlsx-button="${(formNode["@show-xlsx-button"]! == "true")?c}" columns="${numColumns}">
         <template slot="headerForm" scope="header">
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
             <#assign fieldsJsName = "header.search">
