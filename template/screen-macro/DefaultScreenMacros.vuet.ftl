@@ -14,7 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 
 <#macro @element><p>=== Doing nothing for element ${.node?node_name}, not yet implemented. ===</p></#macro>
 
-<#macro screen><#recurse></#macro>
+<#macro screen><#if !screenTitle?has_content><#assign screenTitle = sri.screenUrlInfo.targetScreen.getDefaultMenuName()></#if><#recurse></#macro>
 <#macro widgets><#t>
     <#if sri.doBoundaryComments()><!-- BEGIN screen[@location=${sri.getActiveScreenDef().location}].widgets --></#if>
     <#recurse>
@@ -76,6 +76,7 @@ ${sri.renderSection(.node["@name"])}
 <#macro "container-box">
     <#assign contBoxDivId><@nodeId .node/></#assign>
     <#assign boxHeader = .node["box-header"][0]!>
+    <#assign boxTitle><#if boxHeader??>${ec.getResource().expand(boxHeader["@title"]!"", "")}</#if></#assign>
     <#assign boxType = ec.resource.expand(.node["@type"], "")!>
     <#if !boxType?has_content><#assign boxType = "default"></#if>
     <container-box<#if contBoxDivId?has_content> id="${contBoxDivId}"</#if> type="${boxType}"<#if boxHeader??> title="${ec.getResource().expand(boxHeader["@title"]!"", "")}"</#if> :initial-open="<#if ec.getResource().expand(.node["@initial"]!, "") == "closed">false<#else>true</#if>">
@@ -878,9 +879,16 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                     <input type="hidden" name="${parmName}" value="${xlsxLinkUrlParms.get(parmName)!?html}"></#list>
                 <fieldset class="form-horizontal">
                     <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Xlsx_singleFormTitle">${ec.getL10n().localize("Include")}</label>
+                        <div class="col-sm-9">
+                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_singleFormTitle" name="singleFormTitle" value="${boxTitle}" checked/> <span onClick="$('#${formId}_Xlsx_singleFormTitle').click()" style="cursor: pointer">This Form Only (${boxTitle})</span></span></div>
+                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_allForms"        name="singleFormTitle" value=""/> <span onClick="$('#${formId}_Xlsx_allForms').click()" style="cursor: pointer">All Forms</span></span></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Xlsx_saveFilename">${ec.getL10n().localize("Save to Filename")}</label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Xlsx_saveFilename" value="${formNode["@name"] + ".xlsx"}">
+                            <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Xlsx_saveFilename" value="<#if screenTitle?has_content>${screenTitle + ".xlsx"}<#else>${formNode["@name"] + ".xlsx"}</#if>">
                         </div>
                     </div>
                     <button type="submit" class="btn btn-default">${ec.getL10n().localize("Generate Spreadsheet")}</button>

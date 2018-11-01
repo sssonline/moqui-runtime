@@ -12,7 +12,11 @@
 
 <#macro @element><#-- do nothing for unknown elements --></#macro>
 <#macro screen><#recurse></#macro>
-<#macro widgets><#assign foundContainer = false><#recurse></#macro>
+<#macro widgets>
+    <#if !singleFormTitle?has_content><#assign singleFormTitle = ""></#if>
+    <#assign foundContainer = false>
+    <#recurse>
+</#macro>
 <#macro "fail-widgets"><#recurse></#macro>
 
 <#-- ================ Subscreens ================ -->
@@ -27,11 +31,15 @@
 <#-- ================ Containers ================ -->
 <#macro container><#recurse></#macro>
 <#macro "container-box">
-    <#t><#if foundContainer>,<#else><#assign foundContainer = true></#if>{"title":"<#assign boxHeader = .node["box-header"][0]!>${ec.getResource().expand(boxHeader["@title"]!"", "")}",
+    <#assign boxHeader = .node["box-header"][0]!>
+    <#assign boxTitle = ec.getResource().expand(boxHeader["@title"]!"", "")>
+    <#if !singleFormTitle?has_content || singleFormTitle == boxTitle>
+        <#t><#if foundContainer>,<#else><#assign foundContainer = true></#if>{"title":"${boxTitle}",
 
-    <#t><#if .node["box-body"]?has_content><#recurse .node["box-body"][0]></#if>
-    <#t><#if .node["box-body-nopad"]?has_content><#recurse .node["box-body-nopad"][0]></#if>
-    <#t>}
+        <#t><#if .node["box-body"]?has_content><#recurse .node["box-body"][0]></#if>
+        <#t><#if .node["box-body-nopad"]?has_content><#recurse .node["box-body-nopad"][0]></#if>
+        <#t>}
+    </#if>
 </#macro>
 <#macro "container-panel">
     <#t><#if .node["panel-header"]?has_content><#recurse .node["panel-header"][0]></#if>
