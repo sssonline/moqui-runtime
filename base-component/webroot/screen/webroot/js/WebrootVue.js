@@ -944,7 +944,7 @@ Vue.component('date-period', {
     beforeMount: function() { if (((this.fromDate && this.fromDate.length) || (this.thruDate && this.thruDate.length))) this.fromThruMode = true; }
 });
 Vue.component('drop-down', {
-    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, multiple:String, optionsUrl:String,
+    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, multiple:String, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
         serverSearch:{type:Boolean,'default':false}, serverDelay:{type:Number,'default':300}, serverMinLength:{type:Number,'default':1},
         optionsParameters:Object, labelField:String, valueField:String, dependsOn:Object, dependsOptional:Boolean,
         optionsLoadInit:Boolean, form:String },
@@ -1048,7 +1048,7 @@ Vue.component('drop-down', {
             var jqEl = $(this.$el); var vm = this;
             var wasFocused = jqEl.next().hasClass('select2-container--focus');
             // save the lastVal if there is one to remember what was selected even if new options don't have it, just in case options change again
-            var saveVal = jqEl.select2().val(); if (saveVal && saveVal.length > 1) this.lastVal = saveVal;
+            var saveVal = jqEl.select2().val(); if (!vm.ignoreKey && saveVal && saveVal.length > 1) this.lastVal = saveVal;
             jqEl.select2('destroy'); jqEl.empty();
             this.s2Opts.data = options;
             jqEl.select2(this.s2Opts).on('change', function () { vm.$emit('input', this.value); });

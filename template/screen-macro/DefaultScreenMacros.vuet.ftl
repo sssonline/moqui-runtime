@@ -882,7 +882,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <label class="control-label col-sm-3" for="${formId}_Xlsx_singleFormTitle">${ec.getL10n().localize("Include")}</label>
                         <div class="col-sm-9">
                             <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_singleFormTitle" name="singleFormTitle" value="${boxTitle}" checked/> <span onClick="$('#${formId}_Xlsx_singleFormTitle').click()" style="cursor: pointer">This Form Only (${boxTitle})</span></span></div>
-                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_allForms"        name="singleFormTitle" value=""/> <span onClick="$('#${formId}_Xlsx_allForms').click()" style="cursor: pointer">All Forms</span></span></div>
+                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_allForms"        name="singleFormTitle" value=""/> <span onClick="$('#${formId}_Xlsx_allForms').click()" style="cursor: pointer">All Forms on This Page</span></span></div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -1671,6 +1671,7 @@ a => A, d => D, y => Y
         <#assign currentDescription = ec.getResource().expand(.node["@current-description"], "")></#if>
     <#if isDynamicOptions>
         <#assign doNode = .node["dynamic-options"][0]>
+        <#assign ignoreKey = ec.getResource().expand(doNode["@ignore-current-selected-key"]!, "") == "true">
         <#assign depNodeList = doNode["depends-on"]>
         <#assign doUrlInfo = sri.makeUrlByType(doNode["@transition"], "transition", doNode, "false")>
         <#assign doUrlParameterMap = doUrlInfo.getParameterMap()>
@@ -1681,14 +1682,14 @@ a => A, d => D, y => Y
             <#t><#if .node?parent["@tooltip"]?has_content> data-toggle="tooltip" title="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if>
             <#t><#if ownerForm?has_content> form="${ownerForm}"</#if><#if .node["@size"]?has_content> size="${.node["@size"]}"</#if>
             <#t><#if allowMultiple> :value="[<#list currentValueList as curVal><#if curVal?has_content>'${curVal}',</#if></#list>]"<#else> value="${currentValue!}"</#if>
-            <#if isDynamicOptions> options-url="${doUrlInfo.url}" value-field="${doNode["@value-field"]!"value"}" label-field="${doNode["@label-field"]!"label"}"<#if doNode["@depends-optional"]! == "true"> :depends-optional="true"</#if>
+            <#if isDynamicOptions> options-url="${doUrlInfo.url}" value-field="${doNode["@value-field"]!"value"}" label-field="${doNode["@label-field"]!"label"}"<#if ignoreKey> :ignore-key="true"</#if><#if doNode["@depends-optional"]! == "true"> :depends-optional="true"</#if>
                 <#t> :depends-on="{<#list depNodeList as depNode><#local depNodeField = depNode["@field"]>'${depNode["@parameter"]!depNodeField}':'<@fieldIdByName depNodeField/>'<#sep>, </#list>}"
                 <#t> :options-parameters="{<#list doUrlParameterMap.keySet() as parameterKey><#if doUrlParameterMap.get(parameterKey)?has_content>'${parameterKey}':'${doUrlParameterMap.get(parameterKey)}', </#if></#list>}"
                 <#t><#if doNode["@server-search"]! == "true"> :server-search="true"</#if><#if doNode["@delay"]?has_content> :server-delay="${doNode["@delay"]}"</#if>
                 <#t><#if doNode["@min-length"]?has_content> :server-min-length="${doNode["@min-length"]}"</#if>
                 <#t><#if (.node?children?size > 1)> :options-load-init="true"</#if>
             <#t></#if>
-                :options="[<#if currentValue?has_content && !allowMultiple && !optionsHasCurrent>{id:'${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentValue)}',text:'<#if currentDescription?has_content>${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentDescription!)}<#else>${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentValue)}</#if>'},</#if><#rt>
+                :options="[<#if currentValue?has_content && !allowMultiple && !optionsHasCurrent>{id:'${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentValue)}',text:'<#if currentDescription?has_content>${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentDescription!)}<#else>${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(currentValue)}</#if>'<#if ignoreKey>,ignoreKey:true</#if>},</#if><#rt>
                     <#t><#list (options.keySet())! as key>{id:'<#if key?has_content>${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(key)}<#else>\u00a0</#if>',text:'${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(options.get(key)!)}'}<#sep>,</#list>]"
             <#lt>>
             <#-- support <#if .node["@current"]! == "first-in-list"> again? -->
