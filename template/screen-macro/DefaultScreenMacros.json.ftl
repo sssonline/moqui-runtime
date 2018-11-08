@@ -7,7 +7,7 @@
     <#--   Tab is replaced with \t              -->
     <#--   Double quote is replaced with \"     -->
     <#--   Backslash is replaced with \\        -->
-    <#t><#if textValue??><#if fieldPrinted>,</#if><#assign fieldPrinted = true>"${textValue?replace("\n", "\\n")?replace("\r", "\\r")?replace("\t", "\\t")?replace("\"", "\\\"")?replace("\\", "\\\\")}"</#if>
+    <#t><#if textValue??><#if fieldPrinted!false>,</#if><#assign fieldPrinted = true>"${textValue?replace("\n", "\\n")?replace("\r", "\\r")?replace("\t", "\\t")?replace("\"", "\\\"")?replace("\\", "\\\\")}"</#if>
 </#macro>
 
 <#macro @element><#-- do nothing for unknown elements --></#macro>
