@@ -36,6 +36,7 @@ along with this software (see the LICENSE.md file). If not, see
     <#-- NOTE: pageLines is optional, if 0 don't do page breaks -->
     <#if pageLines?has_content><#assign pageLinesNum = pageLines?number><#else><#assign pageLinesNum = 0></#if>
     <#assign lineWrapBool = ("true" == lineWrap!)>
+    <#assign colSeparatorsBool = ("true" == colSeparators!)>
     <#recurse>
 </#macro>
 <#macro "fail-widgets"><#recurse></#macro>
@@ -164,7 +165,7 @@ along with this software (see the LICENSE.md file). If not, see
         <#list formListColumnList as columnFieldList>
             <#assign cellCharWidth = columnCharWidths.get(columnFieldList_index)>
             <#if (cellCharWidth > 0)>
-                <#t><#if (columnFieldList_index > 0)>|</#if>
+                <#t><#if (colSeparatorsBool && columnFieldList_index > 0)>|</#if>
                 <#assign curColumnFieldSize = columnFieldList.size()>
                 <#if (hdrFieldInColIndex >= curColumnFieldSize)>
                     <#t>${" "?left_pad(cellCharWidth)}
@@ -183,7 +184,7 @@ along with this software (see the LICENSE.md file). If not, see
     <#list formListColumnList as columnFieldList>
         <#assign cellCharWidth = columnCharWidths.get(columnFieldList_index)>
         <#if (cellCharWidth > 0)>
-            <#t><#if (columnFieldList_index > 0)>+</#if>
+            <#t><#if (colSeparatorsBool && columnFieldList_index > 0)>+</#if>
             <#t><#list 1..cellCharWidth as charNum>-</#list>
         </#if>
     </#list>
@@ -214,7 +215,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <#list formListColumnList as columnFieldList>
                     <#assign cellCharWidth = columnCharWidths.get(columnFieldList_index)>
                     <#if (cellCharWidth > 0)>
-                        <#t><#if (columnFieldList_index > 0)>|</#if>
+                        <#t><#if (colSeparatorsBool && columnFieldList_index > 0)>|</#if>
                         <#assign curColumnFieldSize = columnFieldList.size()>
                         <#if (fieldInColIndex >= curColumnFieldSize)>
                             <#t>${" "?left_pad(cellCharWidth)}

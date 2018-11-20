@@ -818,6 +818,12 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Text_colSeparators">${ec.getL10n().localize("Column Separators?")}</label>
+                        <div class="col-sm-9">
+                            <input type="checkbox" class="form-control" name="colSeparators" id="${formId}_Text_colSeparators" value="true" checked>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Text_saveFilename">${ec.getL10n().localize("Save to Filename")}</label>
                         <div class="col-sm-9">
                             <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Text_saveFilename" value="${formNode["@name"] + ".txt"}">
