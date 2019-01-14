@@ -176,7 +176,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     </#if>
     <#assign ajaxParms = ajaxUrlInfo.getParameterMap()>
     <tree-top id="${.node["@name"]}" items="${itemsUrl}" open-path="${ec.getResource().expandNoL10n(.node["@open-path"], "")}"
-              :parameters="{<#list ajaxParms.keySet() as pKey>'${pKey}':'${ajaxParms.get(pKey)!""}'<#sep>,</#list>}"></tree-top>
+              :parameters="{<#list ajaxParms.keySet() as pKey>'${pKey}':'${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafe(ajaxParms.get(pKey)!"")}'<#sep>,</#list>}"></tree-top>
 </#macro>
 <#macro "tree-node"><#-- shouldn't be called directly, but just in case --></#macro>
 <#macro "tree-sub-node"><#-- shouldn't be called directly, but just in case --></#macro>
@@ -615,7 +615,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                 <#assign formSaveFindUrl = sri.buildUrl("formSaveFind").path>
                 <#assign descLabel = ec.getL10n().localize("Description")>
                 <#if activeFormListFind?has_content>
-                    <h5>Active Saved Find: ${activeFormListFind.description?html}</h5>
+                    <h5>${ec.getL10n().localize("Active Saved Find:")} ${activeFormListFind.description?html}</h5>
                 </#if>
                 <#if currentFindUrlParms?has_content>
                     <div><m-form class="form-inline" id="${formId}_NewFind" action="${formSaveFindUrl}">
@@ -957,10 +957,10 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                 <#if formNode["@show-all-button"]! == "true" && (context[listName + 'Count'] < 500)>
                     <#if context["pageNoLimit"]?has_content>
                         <#assign allLinkUrl = sri.getScreenUrlInstance().cloneUrlInstance().removeParameter("pageNoLimit")>
-                        <m-link href="${allLinkUrl.pathWithParams}" class="btn btn-default">Paginate</m-link>
+                        <m-link href="${allLinkUrl.pathWithParams}" class="btn btn-default">${ec.getL10n().localize("Paginate")}</m-link>
                     <#else>
                         <#assign allLinkUrl = sri.getScreenUrlInstance().cloneUrlInstance().addParameter("pageNoLimit", "true")>
-                        <m-link href="${allLinkUrl.pathWithParams}" class="btn btn-default">Show All</m-link>
+                        <m-link href="${allLinkUrl.pathWithParams}" class="btn btn-default">${ec.getL10n().localize("Show All")}</m-link>
                     </#if>
                 </#if>
             </#if>
