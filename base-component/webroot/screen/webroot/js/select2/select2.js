@@ -5416,19 +5416,19 @@ S2.define('select2/core',[
             for (var i=0, len=els.length; i<len; i++) {
               x = els[i];
               if (el == x) {
-                  // Found the current element, search for the next focusable element
-                  for(var j = 1; j < els.length; j++ ) {
-                    // Depending on whether shift is pressed to focus next/previous
-                    idx = i+dir*j;
-                    if( idx < 0 ) idx = len+idx;
-                    if( idx >= len ) idx = idx-len;
-                    nextEl = els[idx];
-                    // NOTE: These checks need to be performed here instead of above, so that the current element can be found even if it's not supposed to be tabbable
-                    if (nextEl.focus && $(nextEl).is(':visible') && $(nextEl).attr('tabindex') != -2 && !$(nextEl).prop('no-tab')) {
-                      nextEl.focus();
-                      break;
-                    }
+                // Found the current element, search for the next focusable element
+                for(var j = 1; j < els.length; j++ ) {
+                  // Depending on whether shift is pressed to focus next/previous
+                  idx = i+dir*j;
+                  if( idx < 0 ) idx = len+idx;
+                  if( idx >= len ) idx = idx-len;
+                  nextEl = els[idx];
+                  // NOTE: These checks need to be performed here instead of above, so that the current element can be found even if it's not supposed to be tabbable
+                  if (nextEl.focus && $(nextEl).is(':visible') && $(nextEl).attr('tabindex') != -2 && !$(nextEl).prop('no-tab')) {
+                    nextEl.focus();
+                    break;
                   }
+                }
               }
             }
           }
