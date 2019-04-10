@@ -952,7 +952,7 @@ Vue.component('date-period', {
 });
 Vue.component('drop-down', {
     props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, multiple:String, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
-        serverSearch:{type:Boolean,'default':false}, serverDelay:{type:Number,'default':300}, serverMinLength:{type:Number,'default':1},
+        serverSearch:{type:Boolean,'default':false}, serverDelay:{type:Number,'default':10}, serverMinLength:{type:Number,'default':1},
         optionsParameters:Object, labelField:String, valueField:String, dependsOn:Object, dependsOptional:Boolean,
         optionsLoadInit:Boolean, form:String, tooltip:String },
     data: function() { return { curData:null, s2Opts:null, lastVal:null } },
