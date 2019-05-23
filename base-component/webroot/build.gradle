@@ -136,6 +136,8 @@ baseJs.add(libsPath + '/mouse0270-bootstrap-notify/bootstrap-notify.min.js')
 baseJs.add(libsPath + '/jeditable.js/jeditable.min.js')
 // Sortable Hierarchical List
 baseJs.add(webrootPath + '/js/jquery-sortable-lists/jquery-sortable-lists.min.js')
+// Mouse wheel event
+baseJs.add(webrootPath + '/js/jquery-mousewheel/jquery.mousewheel.min.js')
 // Moqui Library (3rd party lib workarounds, NotificationClient, etc)
 baseJs.add(webrootPath + '/js/MoquiLib.min.js')
 

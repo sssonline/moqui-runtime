@@ -84,7 +84,7 @@ ${sri.renderSection(.node["@name"])}
         <#if boxHeader??><template slot="header"><#recurse boxHeader></template></#if>
         <#if .node["box-toolbar"]?has_content><template slot="toolbar"><#recurse .node["box-toolbar"][0]></template></#if>
         <#if .node["box-body"]?has_content><box-body<#if .node["box-body"][0]["@height"]?has_content> height="${.node["box-body"][0]["@height"]}"</#if>><#recurse .node["box-body"][0]></box-body></#if>
-        <#if .node["box-body-nopad"]?has_content><#recurse .node["box-body-nopad"][0]></#if>
+        <#if .node["box-body-nopad"]?has_content><div<#if .node["box-body-nopad"][0]["@height"]?has_content> style="max-height: ${.node["box-body-nopad"][0]["@height"]}px; overflow-y: auto;"</#if>><#recurse .node["box-body-nopad"][0]></div></#if>
     </container-box>
 </#macro>
 <#macro "container-row">
@@ -912,6 +912,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 </#macro>
 <#macro paginationHeader formListInfo formId isHeaderDialog>
     <#assign formNode = formListInfo.getFormNode()>
+    <#assign formName = ec.getResource().expandNoL10n(formNode["@name"], "")>
     <#assign mainColInfoList = formListInfo.getMainColInfo()>
     <#assign numColumns = (mainColInfoList?size)!100>
     <#if numColumns == 0><#assign numColumns = 100></#if>
@@ -950,6 +951,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 
             <#if isPaginated>
                 <#assign curPageMaxIndex = context[listName + "PageMaxIndex"]>
+                <input type="hidden" id="${formName}_pageMaxIndex" value="${curPageMaxIndex?c}"/>
                 <form-paginate :paginate="{ count:${context[listName + "Count"]?c}, pageIndex:${context[listName + "PageIndex"]?c},<#rt>
                     <#t> pageSize:${context[listName + "PageSize"]?c}, pageMaxIndex:${context[listName + "PageMaxIndex"]?c},
                     <#lt> pageRangeLow:${context[listName + "PageRangeLow"]?c}, pageRangeHigh:${context[listName + "PageRangeHigh"]?c} }"></form-paginate>
@@ -1033,6 +1035,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign subColInfoList = formListInfo.getSubColInfo()!>
     <#assign hasSubColumns = subColInfoList?has_content>
     <#assign tableStyle><#if .node["@style"]?has_content> ${ec.getResource().expand(.node["@style"], "")}</#if></#assign>
+    <#assign height = formNode["@height"]!"">
     <#assign numColumns = (mainColInfoList?size)!100>
     <#if numColumns == 0><#assign numColumns = 100></#if>
     <#assign formName = ec.getResource().expandNoL10n(formNode["@name"], "")>
@@ -1051,7 +1054,9 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign isServerStatic = formInstance.isServerStatic(sri.getRenderMode())>
     <#assign hiddenParameterMap = sri.getFormHiddenParameters(formNode)>
     <#assign hiddenParameterKeys = hiddenParameterMap.keySet()>
-
+<#if height != "">
+<div class="form-list-height" style="max-height: ${height}px; overflow-y: auto">
+</#if>
 <#if isServerStatic><#-- client rendered, static -->
     <#if !skipHeader><@paginationHeaderModals formListInfo formId isHeaderDialog/></#if>
     <form-list name="${formName}" id="${formId}" rows="${formName}" action="${formListUrlInfo.path}" :multi="${isMulti?c}"<#rt>
@@ -1326,6 +1331,9 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 </#if>
     <#if sri.doBoundaryComments()><!-- END   form-list[@name=${formName}] --></#if>
     <#assign skipForm = false>
+<#if height != "">
+</div>
+</#if>
 </#macro>
 <#macro formListHeaderField fieldNode isHeaderDialog>
     <#if fieldNode["header-field"]?has_content>
