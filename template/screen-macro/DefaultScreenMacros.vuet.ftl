@@ -1054,10 +1054,10 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign isServerStatic = formInstance.isServerStatic(sri.getRenderMode())>
     <#assign hiddenParameterMap = sri.getFormHiddenParameters(formNode)>
     <#assign hiddenParameterKeys = hiddenParameterMap.keySet()>
-    <#assign isPaginated = (!(formNode["@paginate"]! == "false") && context[listName + "Count"]?? && (context[listName + "Count"]! > 0) &&
+    <#assign usePageScroll = (!(formNode["@paginate"]! == "false") &&
             (!formNode["@paginate-always-show"]?has_content || formNode["@paginate-always-show"]! == "true" || (context[listName + "PageMaxIndex"] > 0)))>
 
-<#if isPaginated>
+<#if usePageScroll>
 <div class="form-list-height" style="max-height: ${height}px; overflow-y: auto">
 </#if>
 <#if isServerStatic><#-- client rendered, static -->
@@ -1334,7 +1334,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 </#if>
     <#if sri.doBoundaryComments()><!-- END   form-list[@name=${formName}] --></#if>
     <#assign skipForm = false>
-<#if isPaginated>
+<#if usePageScroll>
 </div>
 </#if>
 </#macro>
