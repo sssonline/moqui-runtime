@@ -1035,7 +1035,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign subColInfoList = formListInfo.getSubColInfo()!>
     <#assign hasSubColumns = subColInfoList?has_content>
     <#assign tableStyle><#if .node["@style"]?has_content> ${ec.getResource().expand(.node["@style"], "")}</#if></#assign>
-    <#assign height = formNode["@height"]!"">
+    <#assign height = formNode["@height"]!"9999">
     <#assign numColumns = (mainColInfoList?size)!100>
     <#if numColumns == 0><#assign numColumns = 100></#if>
     <#assign formName = ec.getResource().expandNoL10n(formNode["@name"], "")>
@@ -1057,7 +1057,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign isPaginated = (!(formNode["@paginate"]! == "false") && context[listName + "Count"]?? && (context[listName + "Count"]! > 0) &&
             (!formNode["@paginate-always-show"]?has_content || formNode["@paginate-always-show"]! == "true" || (context[listName + "PageMaxIndex"] > 0)))>
 
-<#if height != "" || isPaginated>
+<#if isPaginated>
 <div class="form-list-height" style="max-height: ${height}px; overflow-y: auto">
 </#if>
 <#if isServerStatic><#-- client rendered, static -->
@@ -1334,7 +1334,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 </#if>
     <#if sri.doBoundaryComments()><!-- END   form-list[@name=${formName}] --></#if>
     <#assign skipForm = false>
-<#if height != "" || isPaginated>
+<#if isPaginated>
 </div>
 </#if>
 </#macro>
