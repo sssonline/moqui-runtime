@@ -809,13 +809,13 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                     <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Text_lineCharacters">${ec.getL10n().localize("Line Characters")}</label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control" size="4" name="lineCharacters" id="${formId}_Text_lineCharacters" value="132">
+                            <input type="text" class="form-control" size="4" name="lineCharacters" id="${formId}_Text_lineCharacters" value="${formNode["@text-line-characters"]!132}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Text_pageLines">${ec.getL10n().localize("Page Lines")}</label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control" size="4" name="pageLines" id="${formId}_Text_pageLines" value="88">
+                            <input type="text" class="form-control" size="4" name="pageLines" id="${formId}_Text_pageLines" value="${formNode["@text-page-lines"]!88}">
                         </div>
                     </div>
                     <div class="form-group">
