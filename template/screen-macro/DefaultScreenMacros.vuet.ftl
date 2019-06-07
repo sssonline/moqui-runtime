@@ -1063,7 +1063,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#assign hiddenParameterMap = sri.getFormHiddenParameters(formNode)>
     <#assign hiddenParameterKeys = hiddenParameterMap.keySet()>
     <#assign usePageScroll = (!(formNode["@paginate"]! == "false") &&
-            (!formNode["@paginate-always-show"]?has_content || formNode["@paginate-always-show"]! == "true" || (context[listName + "PageMaxIndex"] > 0)))>
+            (!formNode["@paginate-always-show"]?has_content || formNode["@paginate-always-show"]! == "true" || (context[listName + "PageMaxIndex"]!1 > 0)))>
 
 <#if usePageScroll>
 <div class="form-list-height" style="max-height: ${height}px; overflow-y: auto">
