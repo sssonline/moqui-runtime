@@ -718,13 +718,13 @@ Vue.component('form-paginate', {
     '<ul v-if="paginate" class="pagination">' +
         '<template v-if="paginate.pageIndex > 0">' +
             '<li><a href="#" @click.prevent="setIndex(0)"><i class="glyphicon glyphicon-fast-backward"></i></a></li>' +
-            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex-1)"><i class="glyphicon glyphicon-backward"></i></a></li></template>' +
+            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex-1)" title="Paginate Backward: Hover over list, press Shift, and Scroll up"><i class="glyphicon glyphicon-backward"></i></a></li></template>' +
         '<template v-else><li><span><i class="glyphicon glyphicon-fast-backward"></i></span></li><li><span><i class="glyphicon glyphicon-backward"></i></span></li></template>' +
-        '<li v-for="prevIndex in prevArray"><a href="#" @click.prevent="setIndex(prevIndex)">{{prevIndex+1}}</a></li>' +
+        '<li v-for="prevIndex in prevArray"><a href="#" @click.prevent="setIndex(prevIndex)" title="Paginate Backward: Hover over list, press Shift, and Scroll up"</a></li>' +
         '<li><span>Page {{paginate.pageIndex+1}} of {{paginate.pageMaxIndex+1}} ({{paginate.pageRangeLow}} - {{paginate.pageRangeHigh}} of {{paginate.count}})</span></li>' +
-        '<li v-for="nextIndex in nextArray"><a href="#" @click.prevent="setIndex(nextIndex)">{{nextIndex+1}}</a></li>' +
+        '<li v-for="nextIndex in nextArray"><a href="#" @click.prevent="setIndex(nextIndex)" title="Paginate Forward: Hover over list, press Shift, and Scroll down">{{nextIndex+1}}</a></li>' +
         '<template v-if="paginate.pageIndex < paginate.pageMaxIndex">' +
-            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex+1)"><i class="glyphicon glyphicon-forward"></i></a></li>' +
+            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex+1)" title="Paginate Forward: Hover over list, press Shift, and Scroll down"><i class="glyphicon glyphicon-forward"></i></a></li>' +
             '<li><a href="#" @click.prevent="setIndex(paginate.pageMaxIndex)"><i class="glyphicon glyphicon-fast-forward"></i></a></li></template>' +
         '<template v-else><li><span><i class="glyphicon glyphicon-forward"></i></span></li><li><span><i class="glyphicon glyphicon-fast-forward"></i></span></li></template>' +
     '</ul>',
