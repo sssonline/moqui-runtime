@@ -215,7 +215,7 @@ ${sri.renderSection(.node["@name"])}
             </#if>
         </div>
         <#if .node["box-body"]?has_content>
-            <div class="panel-body"<#if .node["box-body"][0]["@height"]?has_content> style="max-height: ${.node["box-body"][0]["@height"]}px; overflow-y: auto;"</#if>>
+            <div class="panel-body"<#if .node["box-body"][0]["@height"]?has_content> style="max-height: ${.node["box-body"][0]["@height"]}px;"</#if>>
                 <#recurse .node["box-body"][0]>
             </div>
         </#if>

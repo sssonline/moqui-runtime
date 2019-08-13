@@ -1068,7 +1068,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             (!formNode["@paginate-always-show"]?has_content || formNode["@paginate-always-show"]! == "true" || ((context[listName + "PageMaxIndex"]!1) > 0)))>
 
 <#if usePageScroll>
-<div class="form-list-height" style="max-height: ${height}px; overflow-y: auto">
+<div class="form-list-height" style="max-height: ${height}px;">
 </#if>
 <#if isServerStatic><#-- client rendered, static -->
     <#if !skipHeader><@paginationHeaderModals formListInfo formId isHeaderDialog/></#if>
