@@ -102,7 +102,7 @@ var moqui = {
 
     NotifyOptions: function(message, url, type, icon) {
         // console.warn("notify options message: [" + message + "] encoded: " + moqui.htmlEncode(message));
-        this.message = moqui.htmlEncode(message);
+        this.message = html_sanitize(message); //moqui.htmlEncode(message);
         if (url) this.url = url;
         if (icon) { this.icon = icon; }
         else {
