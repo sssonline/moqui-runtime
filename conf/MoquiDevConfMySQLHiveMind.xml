@@ -13,8 +13,8 @@
     <default-property name="entity_ds_db_conf" value="mysql"/>
     <default-property name="entity_ds_host" value="localhost"/>
     <default-property name="entity_ds_database" value="hivemind_sssonline_com"/>
-    <default-property name="entity_ds_user" value="moquiJoeUser"/>
-    <default-property name="entity_ds_password" value="Moqui99206!"/>
+    <default-property name="entity_ds_user" value="moqui"/>
+    <default-property name="entity_ds_password" value="moqui"/>
     <default-property name="entity_ds_crypt_pass" value="sssonline:instance:admin:99206"/>
 
     <tools empty-db-load="all"/>
