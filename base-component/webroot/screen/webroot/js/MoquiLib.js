@@ -85,6 +85,8 @@ var moqui = {
         var notificationOptions = {};
         if (jsonObj.topic && jsonObj.topic.length) notificationOptions.tag = jsonObj.topic;
         // consider options 'body' and 'icon' (icon URL, any way to use glyphicon class?)
+        // Disable browser notifications because they're dumb
+/*
         if (window.Notification && Notification.permission === "granted") {
             var notif = new Notification(jsonObj.title, notificationOptions);
             if (jsonObj.link && jsonObj.link.length) notif.onclick = function () { window.open(jsonObj.link); };
@@ -98,6 +100,8 @@ var moqui = {
                 } else { fallback(jsonObj); }
             });
         } else { fallback(jsonObj); }
+*/
+        fallback(jsonObj);
     },
 
     NotifyOptions: function(message, url, type, icon) {

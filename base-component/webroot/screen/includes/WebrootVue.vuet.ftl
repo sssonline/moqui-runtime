@@ -107,7 +107,7 @@ along with this software (see the LICENSE.md file). If not, see
             <#-- nav plugins -->
             <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
             <#-- spinner, usually hidden -->
-            <div class="navbar-right" style="padding:8px;" :class="{ hidden: loading < 1 }"><div class="spinner small"><div>Loading…</div></div></div>
+            <div class="navbar-right" style="padding:8px;" :class="{ hidden: loading < 1 }"><div class="spinner small"><div></div></div></div>
         </div>
     </div></nav></div>
     </#if>
@@ -137,7 +137,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <h4 class="modal-title">${ec.l10n.localize("Documentation")}</h4>
             </div>
             <div class="modal-body" id="screen-document-dialog-body">
-                <div class="spinner"><div>Loading…</div></div>
+                <div class="spinner"><div></div></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-primary" data-dismiss="modal">${ec.l10n.localize("Close")}</button></div>
         </div>

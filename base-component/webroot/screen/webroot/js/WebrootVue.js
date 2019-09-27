@@ -297,7 +297,7 @@ moqui.loadComponent = function(urlInfo, callback, divId) {
 
 /* ========== placeholder components ========== */
 moqui.NotFound = Vue.extend({ template: '<div id="current-page-root"><h4>Screen not found at {{this.$root.currentPath}}</h4></div>' });
-moqui.EmptyComponent = Vue.extend({ template: '<div id="current-page-root"><div class="spinner"><div>Loading…</div></div></div>' });
+moqui.EmptyComponent = Vue.extend({ template: '<div id="current-page-root"><div class="spinner"><div></div></div></div>' });
 
 /* ========== inline components ========== */
 Vue.component('m-link', {
@@ -1434,9 +1434,11 @@ moqui.webrootVue = new Vue({
         this.notificationClient.registerListener("ALL");
 
         $("#screen-document-dialog").on("hidden.bs.modal", function () { var jqEl = $("#screen-document-dialog-body");
-                jqEl.empty(); jqEl.append('<div class="spinner"><div>Loading…</div></div>'); });
+                jqEl.empty(); jqEl.append('<div class="spinner"><div></div></div>'); });
 
+        // Disable browser notifications because they're dumb
         // request Notification permission on load if not already granted or denied
+/*
         if (window.Notification && Notification.permission !== "granted" && Notification.permission !== "denied") {
             Notification.requestPermission(function (status) {
                 if (status === "granted") {
@@ -1446,6 +1448,7 @@ moqui.webrootVue = new Vue({
                 }
             });
         }
+*/
     }
 
 });
