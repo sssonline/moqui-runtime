@@ -1034,23 +1034,33 @@ Vue.component('drop-down', {
             opts.sorter = function(results) {
                 var query = $('.select2-search__field').val().toLowerCase();
 
-                // Sorted alpha, but in this precidence in this order
-                // '^query$'
-                // '^query '
-                // '^query[^ ]+'
-                // '.+query'
+                // Sorted alpha, but in this precedence order
+                var data1 = [] // '^query$'
+                var data2 = [] // '^query '
+                var data3 = [] // '^query[^ ]+'
+                var data4 = [] // '.+query'
+                var data5 = [] // Just in case some logic missed something
 
-                var data1 = results.filter(function(value) { var re = new RegExp('^' + query + '$'); return value.text.toLowerCase().match(re); })
-                var data2 = results.filter(function(value) { var re = new RegExp('^' + query + ' '); return value.text.toLowerCase().match(re); })
-                var data3 = results.filter(function(value) { var re = new RegExp('^' + query + '[^ ]+'); return value.text.toLowerCase().match(re); })
-                var data4 = results.filter(function(value) { var re = new RegExp('^.+' + query); return value.text.toLowerCase().match(re); })
+                var re1 = new RegExp('^' + query + '$');
+                var re2 = new RegExp('^' + query + ' ');
+                var re3 = new RegExp('^' + query + '[^ ]+');
+                var re4 = new RegExp('^.+' + query);
+
+                for( var i = 0; i < results.length; i++ ) {
+                         if( results[i].text.toLowerCase().match(re1) ) data1.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re2) ) data2.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re3) ) data3.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re4) ) data4.push(results[i]);
+                    else data5.push(results[i])
+                }
 
                 data1.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
                 data2.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
                 data3.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
                 data4.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+                data5.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
 
-                return data1.concat(data2).concat(data3).concat(data4);
+                return data1.concat(data2).concat(data3).concat(data4).concat(data5);
             }
         }
         this.s2Opts = opts;
