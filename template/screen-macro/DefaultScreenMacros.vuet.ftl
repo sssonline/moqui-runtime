@@ -906,6 +906,12 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                             <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Xlsx_saveFilename" value="<#if screenTitle?has_content>${screenTitle + ".xlsx"}<#else>${formNode["@name"] + ".xlsx"}</#if>">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Xlsx_saveFilename">${ec.getL10n().localize("Omit Header Row")}</label>
+                        <div class="col-sm-9">
+                            <div class="checkbox-align input-align-top"><span><input type="checkbox" class="form-control" size="40" name="omitHeaderRow" id="${formId}_Xlsx_omitHeaderRow"></span></div>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-default">${ec.getL10n().localize("Generate Spreadsheet")}</button>
                 </fieldset>
             </form>
