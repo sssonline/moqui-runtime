@@ -952,7 +952,7 @@ Vue.component('date-period', {
     beforeMount: function() { if (((this.fromDate && this.fromDate.length) || (this.thruDate && this.thruDate.length))) this.fromThruMode = true; }
 });
 Vue.component('drop-down', {
-    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, multiple:String, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
+    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, prioritySearch:Boolean, multiple:String, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
         serverSearch:{type:Boolean,'default':false}, serverDelay:{type:Number,'default':10}, serverMinLength:{type:Number,'default':1},
         optionsParameters:Object, labelField:String, valueField:String, dependsOn:Object, dependsOptional:Boolean,
         optionsLoadInit:Boolean, form:String, tooltip:String },
@@ -1029,6 +1029,39 @@ Vue.component('drop-down', {
             opts.width = "100%";
             jqEl.css("min-width", "200px");
             jqEl.addClass("noResetSelect2"); // so doesn't get reset on container dialog load
+        }
+        if( this.prioritySearch ) {
+            opts.sorter = function(results) {
+                var query = $('.select2-search__field').val().toLowerCase();
+
+                // Sorted alpha, but in this precedence order
+                var data1 = [] // '^query$'
+                var data2 = [] // '^query '
+                var data3 = [] // '^query[^ ]+'
+                var data4 = [] // '.+query'
+                var data5 = [] // Just in case some logic missed something
+
+                var re1 = new RegExp('^' + query + '$');
+                var re2 = new RegExp('^' + query + ' ');
+                var re3 = new RegExp('^' + query + '[^ ]+');
+                var re4 = new RegExp('^.+' + query);
+
+                for( var i = 0; i < results.length; i++ ) {
+                         if( results[i].text.toLowerCase().match(re1) ) data1.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re2) ) data2.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re3) ) data3.push(results[i]);
+                    else if( results[i].text.toLowerCase().match(re4) ) data4.push(results[i]);
+                    else data5.push(results[i])
+                }
+
+                data1.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+                data2.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+                data3.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+                data4.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+                data5.sort(function (a, b) { return a.text.toLowerCase().localeCompare(b.text.toLowerCase()); });
+
+                return data1.concat(data2).concat(data3).concat(data4).concat(data5);
+            }
         }
         this.s2Opts = opts;
         jqEl.select2(opts).on('change', function () { vm.$emit('input', this.value); });

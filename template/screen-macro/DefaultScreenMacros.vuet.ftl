@@ -906,6 +906,12 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                             <input type="text" class="form-control" size="40" name="saveFilename" id="${formId}_Xlsx_saveFilename" value="<#if screenTitle?has_content>${screenTitle + ".xlsx"}<#else>${formNode["@name"] + ".xlsx"}</#if>">
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Xlsx_saveFilename">${ec.getL10n().localize("Omit Header Row")}</label>
+                        <div class="col-sm-9">
+                            <div class="checkbox-align input-align-top"><span><input type="checkbox" class="form-control" size="40" name="omitHeaderRow" id="${formId}_Xlsx_omitHeaderRow"></span></div>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-default">${ec.getL10n().localize("Generate Spreadsheet")}</button>
                 </fieldset>
             </form>
@@ -1685,6 +1691,7 @@ a => A, d => D, y => Y
     <#assign tlId><@fieldId .node/></#assign>
     <#assign allowMultiple = ec.getResource().expand(.node["@allow-multiple"]!, "") == "true">
     <#assign allowEmpty = ec.getResource().expand(.node["@allow-empty"]!, "") == "true">
+    <#assign prioritySearch = ec.getResource().expand(.node["@priority-search"]!, "") == "true">
     <#assign isDynamicOptions = .node["dynamic-options"]?has_content>
     <#assign name><@fieldName .node/></#assign>
     <#assign namePlain = ddFieldNode["@name"]>
@@ -1715,7 +1722,7 @@ a => A, d => D, y => Y
         <#assign ignoreKey = false>
     </#if>
     <drop-down name="${name}" id="${tlId}" class="<#if isDynamicOptions> dynamic-options</#if><#if .node["@style"]?has_content> ${ec.getResource().expand(.node["@style"], "")}</#if><#if validationClasses?has_content> ${validationClasses}</#if>"<#rt>
-            <#t><#if allowMultiple> multiple="multiple"</#if><#if allowEmpty> :allow-empty="true"</#if><#if .node["@combo-box"]! == "true"> :combo="true"</#if>
+            <#t><#if allowMultiple> multiple="multiple"</#if><#if allowEmpty> :allow-empty="true"</#if><#if prioritySearch> :priority-search="true"</#if><#if .node["@combo-box"]! == "true"> :combo="true"</#if>
             <#t><#if .node?parent["@tooltip"]?has_content> tooltip="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if>
             <#t><#if ownerForm?has_content> form="${ownerForm}"</#if><#if .node["@size"]?has_content> size="${.node["@size"]}"</#if>
             <#t><#if allowMultiple> :value="[<#list currentValueList as curVal><#if curVal?has_content>'${curVal}',</#if></#list>]"<#else> value="${currentValue!}"</#if>
@@ -1780,7 +1787,7 @@ a => A, d => D, y => Y
     <#assign buttonText><#if .node["@text"]?has_content>${ec.getResource().expand(.node["@text"], "")}<#else><@fieldTitle .node?parent/></#if></#assign>
     <#assign iconClass = .node["@icon"]!>
     <#if !iconClass?has_content><#assign iconClass = sri.getThemeIconClass(buttonText)!></#if>
-    <button type="submit" name="<@fieldName .node/>" value="<@fieldName .node/>" id="<@fieldId .node/>"<#if confirmationMessage?has_content> onclick="return confirm('${confirmationMessage?js_string}');"</#if><#if .node?parent["@tooltip"]?has_content> data-toggle="tooltip" title="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if> class="btn btn-primary btn-sm"<#if ownerForm?has_content> form="${ownerForm}"</#if>><#if iconClass?has_content><i class="${iconClass}"></i> </#if>
+    <button type="submit" name="<@fieldName .node/>" value="<@fieldName .node/>" id="<@fieldId .node/>"<#if confirmationMessage?has_content> onclick="return confirm('${confirmationMessage?js_string}');"</#if><#if .node?parent["@tooltip"]?has_content> data-toggle="tooltip" title="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if> class="btn btn-primary btn-sm<#if .node["@style"]?has_content> ${ec.getResource().expand(.node["@style"], "")}</#if>"<#if ownerForm?has_content> form="${ownerForm}"</#if>><#if iconClass?has_content><i class="${iconClass}"></i> </#if>
     <#if .node["image"]?has_content><#assign imageNode = .node["image"][0]>
         <img src="${sri.makeUrlByType(imageNode["@url"],imageNode["@url-type"]!"content",null,"true")}" alt="<#if imageNode["@alt"]?has_content>${imageNode["@alt"]}<#else><@fieldTitle .node?parent/></#if>"<#if imageNode["@width"]?has_content> width="${imageNode["@width"]}"</#if><#if imageNode["@height"]?has_content> height="${imageNode["@height"]}"</#if>>
     <#else>
