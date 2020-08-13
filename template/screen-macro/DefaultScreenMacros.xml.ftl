@@ -100,7 +100,7 @@ along with this software (see the LICENSE.md file). If not, see
     <${formNode["@name"]}>
     <#list listObject as listEntry>
         <${formNode["@name"]}Entry<#rt>
-            <#assign listEntryIndex = listEntry_index>
+            <#assign listEntryIndex = listEntry_index?c>
             <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
             ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}<#t>
             <#assign hasPrevColumn = false>

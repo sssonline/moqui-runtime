@@ -314,7 +314,7 @@ along with this software (see the LICENSE.md file). If not, see
         </fo:table-header>
         <fo:table-body>
             <#list listObject as listEntry>
-                <#assign listEntryIndex = listEntry_index>
+                <#assign listEntryIndex = listEntry_index?c>
                 <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
                 ${sri.startFormListRow(formListInfo, listEntry, listEntryIndex, listEntry_has_next)}
                 <fo:table-row<#if listEntryIndex % 2 == 0> background-color="#EEEEEE"</#if>>

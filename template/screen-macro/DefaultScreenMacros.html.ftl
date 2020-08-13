@@ -1347,8 +1347,8 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#-- all form elements outside table element and referred to with input/etc.@form attribute for proper HTML -->
     <#if !(isMulti || skipForm) && listHasContent><#list listObject as listEntry>
         ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
-        <form name="${formId}_${listEntry_index}" id="${formId}_${listEntry_index}" method="post" action="${formListUrlInfo.url}">
-            <#assign listEntryIndex = listEntry_index>
+        <form name="${formId}_${listEntry_index?c}" id="${formId}_${listEntry_index?c}" method="post" action="${formListUrlInfo.url}">
+            <#assign listEntryIndex = listEntry_index?c>
             <input type="hidden" name="moquiSessionToken" value="${(ec.getWeb().sessionToken)!}">
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
             <#-- hidden fields -->
@@ -1418,7 +1418,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <input type="hidden" name="_isMulti" value="true">
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
             <#if listHasContent><#list listObject as listEntry>
-                <#assign listEntryIndex = listEntry_index>
+                <#assign listEntryIndex = listEntry_index?c>
                 ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
                 <#-- hidden fields -->
                 <#assign hiddenFieldList = formListInfo.getListHiddenFieldList()>
@@ -1507,11 +1507,11 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
         <#t>${sri.popContext()}<#-- context was pushed for the form so pop here at the end -->
     </#if>
     <#if listHasContent><#list listObject as listEntry>
-        <#assign listEntryIndex = listEntry_index>
+        <#assign listEntryIndex = listEntry_index?c>
         <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
         ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
         <tr>
-        <#if !(isMulti || skipForm)><#assign ownerForm = formId + "_" + listEntry_index></#if>
+        <#if !(isMulti || skipForm)><#assign ownerForm = formId + "_" + listEntry_index?c></#if>
         <#-- actual columns -->
         <#list mainColInfoList as columnFieldList>
             <td>

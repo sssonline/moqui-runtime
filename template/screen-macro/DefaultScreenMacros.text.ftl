@@ -204,7 +204,7 @@ along with this software (see the LICENSE.md file). If not, see
     <#assign lineCount = 1>
     <@headerRows formListColumnList columnCharWidths/>
     <#list listObject as listEntry>
-        <#assign listEntryIndex = listEntry_index>
+        <#assign listEntryIndex = listEntry_index?c>
         <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
         <#t>${sri.startFormListRow(formListInfo, listEntry, listEntryIndex, listEntry_has_next)}
         <#list 0..5 as fieldInColIndex>

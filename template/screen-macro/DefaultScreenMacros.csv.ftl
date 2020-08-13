@@ -133,7 +133,7 @@ on the same screen to increase reusability of those screens -->
     </#list>
 
     <#list listObject as listEntry>
-        <#assign listEntryIndex = listEntry_index>
+        <#assign listEntryIndex = listEntry_index?c>
         <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
         ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}<#t>
         <#assign hasPrevColumn = false>

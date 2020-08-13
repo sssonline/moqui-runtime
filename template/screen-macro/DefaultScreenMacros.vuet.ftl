@@ -1136,11 +1136,11 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#-- all form elements outside table element and referred to with input/etc.@form attribute for proper HTML -->
     <#if !(isMulti || skipForm) && listHasContent><#list listObject as listEntry>
         ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
-        <m-form name="${formId}_${listEntry_index}" id="${formId}_${listEntry_index}" action="${formListUrlInfo.path}">
+        <m-form name="${formId}_${listEntry_index?c}" id="${formId}_${listEntry_index?c}" action="${formListUrlInfo.path}">
             <input type="hidden" name="pageIndex" value="${pageIndex!"0"}">
             <#if orderByField?has_content><input type="hidden" name="orderByField" value="${orderByField}"></#if>
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
-            <#assign listEntryIndex = listEntry_index>
+            <#assign listEntryIndex = listEntry_index?c>
             <#-- hidden fields -->
             <#assign hiddenFieldList = formListInfo.getListHiddenFieldList()>
             <#list hiddenFieldList as hiddenField><@formListSubField hiddenField true false isMulti false/></#list>
@@ -1208,7 +1208,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             </#if></#list>
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
             <#if listHasContent><#list listObject as listEntry>
-                <#assign listEntryIndex = listEntry_index>
+                <#assign listEntryIndex = listEntry_index?c>
                 <#t>${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
                 <#-- hidden fields -->
                 <#assign hiddenFieldList = formListInfo.getListHiddenFieldList()>
@@ -1282,11 +1282,11 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
         <#t>${sri.popContext()}<#-- context was pushed for the form so pop here at the end -->
     </#if>
     <#if listHasContent><#list listObject as listEntry>
-        <#assign listEntryIndex = listEntry_index>
+        <#assign listEntryIndex = listEntry_index?c>
         <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
         <#t>${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
         <tr>
-        <#if !(isMulti || skipForm)><#assign ownerForm = formId + "_" + listEntry_index></#if>
+        <#if !(isMulti || skipForm)><#assign ownerForm = formId + "_" + listEntry_index?c></#if>
         <#-- actual columns -->
         <#list mainColInfoList as columnFieldList>
             <td>
@@ -1487,7 +1487,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
 <#-- ================== Form Field Widgets ==================== -->
 <#-- ========================================================== -->
 
-<#macro fieldName widgetNode><#assign fieldNode=widgetNode?parent?parent/>${fieldNode["@name"]?html}<#if isMulti?exists && isMulti && listEntryIndex?has_content && listEntryIndex?matches("[\\d,]*")>_${listEntryIndex}</#if></#macro>
+<#macro fieldName widgetNode><#assign fieldNode=widgetNode?parent?parent/>${fieldNode["@name"]?html}<#if isMulti?exists && isMulti && listEntryIndex?has_content && listEntryIndex?matches("\\d*")>_${listEntryIndex}</#if></#macro>
 <#macro fieldId widgetNode><#assign fieldNode=widgetNode?parent?parent/><#if fieldFormId?has_content>${fieldFormId}<#else>${ec.getResource().expandNoL10n(fieldNode?parent["@name"], "")}</#if>_${fieldNode["@name"]}<#if listEntryIndex?has_content>_${listEntryIndex}</#if><#if sectionEntryIndex?has_content>_${sectionEntryIndex}</#if></#macro>
 <#macro fieldTitle fieldSubNode><#t>
     <#t><#if (fieldSubNode?node_name == 'header-field')>
