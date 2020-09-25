@@ -24,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
     <#assign responseMap = formResponseInfo.responseMap>
 
     <#list dbFormFieldList as dbFormField><#if !dbFormField.printPageNumber?has_content || dbFormField.printPageNumber == fieldsPage>
-        <#assign responseValue = responseMap[dbFormField.fieldName]!"">
+        <#assign responseValue = (responseMap[dbFormField.fieldName]!"")?replace("&", "&amp;")>
         <#if responseValue?contains("\n")><#assign responseValue><#list responseValue?split("\n") as responseValuePart>
             <fo:block>${responseValuePart}</fo:block>
         </#list></#assign></#if>
