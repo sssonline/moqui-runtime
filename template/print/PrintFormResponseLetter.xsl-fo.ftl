@@ -57,9 +57,22 @@ along with this software (see the LICENSE.md file). If not, see
         <#list 1..printRepeatCount as repeatNum>
             <#list 1..formResponseInfo.dbFormFieldPages as fieldsPage>
                 <#if formResponseInfo.dbForm.printContainerWidth?has_content>
-                    <fo:inline-container width="${formResponseInfo.dbForm.printContainerWidth}" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
-                        <@formResponse formResponseInfo fieldsPage/>
-                    </fo:inline-container>
+                    <#if formResponseInfo.dbForm.printDuplicateRight?has_content>
+                        <fo:block-container width="8.5in" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
+                            <fo:block>
+                                <fo:inline-container width="${formResponseInfo.dbForm.printContainerWidth}" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
+                                    <@formResponse formResponseInfo fieldsPage/>
+                                </fo:inline-container>
+                                <fo:inline-container margin-left="${formResponseInfo.dbForm.printDuplicateRight}" margin-right="-${formResponseInfo.dbForm.printDuplicateRight}" width="${formResponseInfo.dbForm.printContainerWidth}" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
+                                    <@formResponse formResponseInfo fieldsPage/>
+                                </fo:inline-container>
+                            </fo:block>
+                        </fo:block-container>
+                    <#else>
+                        <fo:block-container width="${formResponseInfo.dbForm.printContainerWidth}" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
+                            <@formResponse formResponseInfo fieldsPage/>
+                        </fo:block-container>
+                    </#if>
                 <#else>
                     <fo:block-container width="8.5in" height="${formResponseInfo.dbForm.printContainerHeight!"11in"}">
                         <@formResponse formResponseInfo fieldsPage/>
