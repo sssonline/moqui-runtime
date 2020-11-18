@@ -2222,6 +2222,7 @@ a => A, d => D, y => Y
         <#t><input id="${id}_ac" type="<#if validationClasses?contains("email")>email<#elseif validationClasses?contains("url")>url<#else>text</#if>"
             <#t> name="${name}_ac" value="${valueText?html}" size="${.node.@size!"30"}"<#if .node.@maxlength?has_content> maxlength="${.node.@maxlength}"</#if>
             <#t><#if ec.getResource().condition(.node.@disabled!"false", "")> disabled="disabled"</#if>
+            <#t><#if .node["@read-only"]!"false" == "true"> readonly="readonly"</#if>
             <#t> class="form-control typeahead<#if validationClasses?has_content> ${validationClasses}</#if>"<#if validationClasses?contains("required")> required</#if>
             <#t><#if regexpInfo?has_content> pattern="${regexpInfo.regexp}" data-msg-pattern="${regexpInfo.message!"Invalid format"}"</#if>
             <#t><#if .node?parent["@tooltip"]?has_content> data-toggle="tooltip" title="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if> autocomplete="off"<#if ownerForm?has_content> form="${ownerForm}"</#if>>
@@ -2265,6 +2266,7 @@ a => A, d => D, y => Y
         <#t><input id="${id}" type="<#if validationClasses?contains("email")>email<#elseif validationClasses?contains("url")>url<#else>text</#if>"
         <#t> name="${name}" value="${fieldValue?html}" <#if .node.@size?has_content>size="${.node.@size}"<#else>style="width:100%;"</#if><#if .node.@maxlength?has_content> maxlength="${.node.@maxlength}"</#if>
         <#t><#if ec.getResource().condition(.node.@disabled!"false", "")> disabled="disabled"</#if>
+        <#t><#if .node["@read-only"]!"false" == "true"> readonly="readonly"</#if>
         <#t> class="form-control<#if validationClasses?has_content> ${validationClasses}</#if><#if tlAlign == "center"> text-center<#elseif tlAlign == "right"> text-right</#if>"
         <#t><#if validationClasses?contains("required")> required</#if><#if regexpInfo?has_content> pattern="${regexpInfo.regexp}" data-msg-pattern="${regexpInfo.message!"Invalid format"}"</#if>
         <#t><#if .node?parent["@tooltip"]?has_content> data-toggle="tooltip" title="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if><#if ownerForm?has_content> form="${ownerForm}"</#if>>
