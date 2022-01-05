@@ -206,7 +206,7 @@ along with this software (see the LICENSE.md file). If not, see
     <#list listObject as listEntry>
         <#assign listEntryIndex = listEntry_index?c>
         <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
-        <#t>${sri.startFormListRow(formListInfo, listEntry, listEntryIndex, listEntry_has_next)}
+        <#t>${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
         <#list 0..5 as fieldInColIndex>
             <#assign hasMoreFields = false>
             <#list 0..10 as lineWrapCounter>

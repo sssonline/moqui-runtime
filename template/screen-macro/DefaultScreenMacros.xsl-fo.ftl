@@ -316,8 +316,8 @@ along with this software (see the LICENSE.md file). If not, see
             <#list listObject as listEntry>
                 <#assign listEntryIndex = listEntry_index?c>
                 <#-- NOTE: the form-list.@list-entry attribute is handled in the ScreenForm class through this call: -->
-                ${sri.startFormListRow(formListInfo, listEntry, listEntryIndex, listEntry_has_next)}
-                <fo:table-row<#if listEntryIndex % 2 == 0> background-color="#EEEEEE"</#if>>
+                ${sri.startFormListRow(formListInfo, listEntry, listEntry_index, listEntry_has_next)}
+                <fo:table-row<#if listEntry_index % 2 == 0> background-color="#EEEEEE"</#if>>
                     <#list formListColumnList as columnFieldList>
                         <#assign cellCharWidth = columnCharWidths.get(columnFieldList_index)>
                         <#if (cellCharWidth > 0)>
