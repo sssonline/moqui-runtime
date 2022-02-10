@@ -801,7 +801,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
         <#assign textLinkUrlParms = textLinkUrl.getParameterMap()>
         <container-dialog id="${showTextDialogId}" title="${ec.getL10n().localize("Export Fixed-Width Plain Text")}">
             <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
-            <form id="${formId}_Text" method="post" action="${textLinkUrl.getUrl()}">
+            <form id="${formId}_Text" method="post" action="${textLinkUrl.getUrl()}" onsubmit="$('#${showTextDialogId}').modal('hide'); return true;">
                 <input type="hidden" name="renderMode" value="text">
                 <input type="hidden" name="pageNoLimit" value="true">
                 <input type="hidden" name="lastStandalone" value="true">
@@ -849,7 +849,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
         <#assign pdfLinkUrlParms = pdfLinkUrl.getParameterMap()>
         <container-dialog id="${showPdfDialogId}" title="${ec.getL10n().localize("Generate PDF")}">
             <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
-            <form id="${formId}_Pdf" method="post" action="${ec.web.getWebappRootUrl(false, null)}/fop${pdfLinkUrl.getPath()}">
+            <form id="${formId}_Pdf" method="post" action="${ec.web.getWebappRootUrl(false, null)}/fop${pdfLinkUrl.getPath()}" onsubmit="$('#${showPdfDialogId}').modal('hide'); return true;">
                 <input type="hidden" name="pageNoLimit" value="true">
                 <#list pdfLinkUrlParms.keySet() as parmName>
                     <input type="hidden" name="${parmName}" value="${pdfLinkUrlParms.get(parmName)!?html}"></#list>
@@ -888,7 +888,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
         <#assign xlsxLinkUrlParms = xlsxLinkUrl.getParameterMap()>
         <container-dialog id="${showXlsxDialogId}" encode="true" title="${ec.getL10n().localize("Generate Spreadsheet")}">
             <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
-            <form id="${formId}_Xlsx" method="post" action="${ec.web.getWebappRootUrl(false, null)}/poi${xlsxLinkUrl.getPath()}">
+            <form id="${formId}_Xlsx" method="post" action="${ec.web.getWebappRootUrl(false, null)}/poi${xlsxLinkUrl.getPath()}" onsubmit="$('#${showXlsxDialogId}').modal('hide'); return true;">
                 <input type="hidden" name="pageNoLimit" value="true">
                 <#list xlsxLinkUrlParms.keySet() as parmName>
                     <input type="hidden" name="${parmName}" value="${xlsxLinkUrlParms.get(parmName)!?html}"></#list>
@@ -913,6 +913,41 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         </div>
                     </div>
                     <button type="submit" class="btn btn-default">${ec.getL10n().localize("Generate Spreadsheet")}</button>
+                </fieldset>
+            </form>
+        </container-dialog>
+    </#if>
+    <#if formNode["@show-line-button"]! == "true">
+        <#assign showLineDialogId = formId + "_LineDialog">
+        <#assign lineLinkUrl = sri.getScreenUrlInstance()>
+        <#assign lineLinkUrlParms = lineLinkUrl.getParameterMap()>
+        <container-dialog id="${showLineDialogId}" encode="true" title="${ec.getL10n().localize("Send to Line Printer")}">
+            <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
+            <form id="${formId}_Line" method="post" action="${ec.web.getWebappRootUrl(false, null)}/line${lineLinkUrl.getPath()}">
+                <input type="hidden" name="pageNoLimit" value="true">
+                <#list lineLinkUrlParms.keySet() as parmName>
+                    <input type="hidden" name="${parmName}" value="${lineLinkUrlParms.get(parmName)!?html}"></#list>
+                <fieldset class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Line_printerIP">${ec.getL10n().localize("Select Printer")}</label>
+                        <div class="col-sm-9">
+                            <drop-down id="${formId}_Line_printerIP" name="printerIP"
+                                       :server-search="true" :server-min-length="0" :options-load-init="true"
+                                       options-url="/apps/basalt/getNetworkPrinterList"></drop-down>
+
+                        </div>
+                    </div>
+                    <input type="button" class="btn btn-default" value="${ec.getL10n().localize("Print")}"
+                            onClick="var ip = $.trim($('#${formId}_Line_printerIP').val());<#rt>
+                                    <#t>if( !ip ) { alert('Please select a printer first.'); return;}
+                                    <#t>$.ajax({type:'POST', url:'${ec.web.getWebappRootUrl(false, null)}/line${lineLinkUrl.getPath()}',
+                                        <#t>data:{moquiSessionToken: '${(ec.getWeb().sessionToken)!}',
+                                              <#t>pageNoLimit:true,
+                                              <#list lineLinkUrlParms.keySet() as parmName>
+                                                  <#t>${parmName}: '${lineLinkUrlParms.get(parmName)!?html}',</#list>
+                                              <#t>printerIP: $('#${formId}_Line_printerIP').val()
+                                              <#t>},
+                                        <#t>dataType:'text', success:function(defaultText) {$('#${showLineDialogId}').modal('hide');} });"/>
                 </fieldset>
             </form>
         </container-dialog>
@@ -991,6 +1026,10 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#if formNode["@show-xlsx-button"]! == "true">
                 <#assign showXlsxDialogId = formId + "_XlsxDialog">
                 <button id="${showXlsxDialogId}_button" type="button" data-toggle="modal" data-target="#${showXlsxDialogId}" data-original-title="${ec.getL10n().localize("XLSX")}" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> ${ec.getL10n().localize("XLSX")}</button>
+            </#if>
+            <#if formNode["@show-line-button"]! == "true">
+                <#assign showLineDialogId = formId + "_LineDialog">
+                <button id="${showLineDialogId}_button" type="button" data-toggle="modal" data-target="#${showLineDialogId}" data-original-title="${ec.getL10n().localize("LINE")}" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-print"></i> ${ec.getL10n().localize("Print")}</button>
             </#if>
 
             <#if (context[listName + "Count"]!0) == 0>
@@ -1085,6 +1124,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#t> :csv-button="${(formNode["@show-csv-button"]! == "true")?c}" :text-button="${(formNode["@show-text-button"]! == "true")?c}"
             <#t> :pdf-button="${(formNode["@show-pdf-button"]! == "true")?c}" columns="${numColumns}">
             <#lt> :xlsx-button="${(formNode["@show-xlsx-button"]! == "true")?c}" columns="${numColumns}">
+            <#lt> :line-button="${(formNode["@show-line-button"]! == "true")?c}" columns="${numColumns}">
         <template slot="headerForm" slot-scope="header">
             <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
             <#assign fieldsJsName = "header.search">
