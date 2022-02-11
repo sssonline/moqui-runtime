@@ -925,9 +925,35 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#-- NOTE: don't use m-form, most commonly results in download and if not won't be html -->
             <form id="${formId}_Line" method="post" action="${ec.web.getWebappRootUrl(false, null)}/line${lineLinkUrl.getPath()}">
                 <input type="hidden" name="pageNoLimit" value="true">
+                <input type="hidden" name="filename" value="">
+                <input type="hidden" name="saveFilename" value="">
                 <#list lineLinkUrlParms.keySet() as parmName>
                     <input type="hidden" name="${parmName}" value="${lineLinkUrlParms.get(parmName)!?html}"></#list>
                 <fieldset class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Line_lineCharacters">${ec.getL10n().localize("Line Characters")}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" size="4" name="lineCharacters" id="${formId}_Line_lineCharacters" value="${formNode["@text-line-characters"]!132}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Line_pageLines">${ec.getL10n().localize("Page Lines")}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" size="4" name="pageLines" id="${formId}_Line_pageLines" value="${formNode["@text-page-lines"]!88}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Line_lineWrap">${ec.getL10n().localize("Line Wrap?")}</label>
+                        <div class="col-sm-9">
+                            <input type="checkbox" class="form-control" name="lineWrap" id="${formId}_Line_lineWrap" value="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-3" for="${formId}_Line_colSeparators">${ec.getL10n().localize("Column Separators?")}</label>
+                        <div class="col-sm-9">
+                            <input type="checkbox" class="form-control" name="colSeparators" id="${formId}_Line_colSeparators" value="true" checked>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Line_printerIP">${ec.getL10n().localize("Select Printer")}</label>
                         <div class="col-sm-9">
@@ -942,7 +968,14 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                                     <#t>if( !ip ) { alert('Please select a printer first.'); return;}
                                     <#t>$.ajax({type:'POST', url:'${ec.web.getWebappRootUrl(false, null)}/line${lineLinkUrl.getPath()}',
                                         <#t>data:{moquiSessionToken: '${(ec.getWeb().sessionToken)!}',
+                                              <#t>renderMode:'line',
                                               <#t>pageNoLimit:true,
+                                              <#t>lineCharacters:$('#${formId}_Line_lineCharacters').val(),
+                                              <#t>pageLines:$('#${formId}_Line_pageLines').val(),
+                                              <#t>lineWrap:($('#${formId}_Line_lineWrap').prop('checked') ? 'true' : 'false'),
+                                              <#t>colSeparators:($('#${formId}_Line_colSeparators').prop('checked') ? 'true' : 'false'),
+                                              <#t>filename:' ',
+                                              <#t>saveFilename:' ',
                                               <#list lineLinkUrlParms.keySet() as parmName>
                                                   <#t>${parmName}: '${lineLinkUrlParms.get(parmName)!?html}',</#list>
                                               <#t>printerIP: $('#${formId}_Line_printerIP').val()
