@@ -858,16 +858,16 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <label class="control-label col-sm-3" for="${formId}_Pdf_layoutMaster">${ec.getL10n().localize("Page Layout")}</label>
                         <div class="col-sm-9">
                             <select name="layoutMaster"  id="${formId}_Pdf_layoutMaster" class="form-control">
-                                <option value="letter-landscape">US Letter - Landscape (11x8.5)</option>
-                                <option value="letter-portrait">US Letter - Portrait (8.5x11)</option>
-                                <option value="legal-landscape">US Legal - Landscape (14x8.5)</option>
-                                <option value="legal-portrait">US Legal - Portrait (8.5x14)</option>
-                                <option value="tabloid-landscape">US Tabloid - Landscape (17x11)</option>
-                                <option value="tabloid-portrait">US Tabloid - Portrait (11x17)</option>
-                                <option value="a4-landscape">A4 - Landscape (297x210)</option>
-                                <option value="a4-portrait">A4 - Portrait (210x297)</option>
-                                <option value="a3-landscape">A3 - Landscape (420x297)</option>
-                                <option value="a3-portrait">A3 - Portrait (297x420)</option>
+                                <option value="letter-landscape"<#if formNode["@default-layout-master"]! == "letter-landscape"> selected="selected"</#if>>US Letter - Landscape (11x8.5)</option>
+                                <option value="letter-portrait"<#if formNode["@default-layout-master"]! == "letter-portrait"> selected="selected"</#if>>US Letter - Portrait (8.5x11)</option>
+                                <option value="legal-landscape"<#if formNode["@default-layout-master"]! == "legal-landscape"> selected="selected"</#if>>US Legal - Landscape (14x8.5)</option>
+                                <option value="legal-portrait"<#if formNode["@default-layout-master"]! == "legal-portrait"> selected="selected"</#if>>US Legal - Portrait (8.5x14)</option>
+                                <option value="tabloid-landscape"<#if formNode["@default-layout-master"]! == "tabloid-landscape"> selected="selected"</#if>>US Tabloid - Landscape (17x11)</option>
+                                <option value="tabloid-portrait"<#if formNode["@default-layout-master"]! == "tabloid-portrait"> selected="selected"</#if>>US Tabloid - Portrait (11x17)</option>
+                                <option value="a4-landscape"<#if formNode["@default-layout-master"]! == "a4-landscape"> selected="selected"</#if>>A4 - Landscape (297x210)</option>
+                                <option value="a4-portrait"<#if formNode["@default-layout-master"]! == "a4-portrait"> selected="selected"</#if>>A4 - Portrait (210x297)</option>
+                                <option value="a3-landscape"<#if formNode["@default-layout-master"]! == "a3-landscape"> selected="selected"</#if>>A3 - Landscape (420x297)</option>
+                                <option value="a3-portrait"<#if formNode["@default-layout-master"]! == "a3-portrait"> selected="selected"</#if>>A3 - Portrait (297x420)</option>
                             </select>
                         </div>
                     </div>
