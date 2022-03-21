@@ -896,7 +896,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                     <div class="form-group">
                         <label class="control-label col-sm-3" for="${formId}_Xlsx_singleFormTitle">${ec.getL10n().localize("Include")}</label>
                         <div class="col-sm-9">
-                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_singleFormTitle" name="singleFormTitle" value="${boxTitle}" checked/> <span onClick="$('#${formId}_Xlsx_singleFormTitle').click()" style="cursor: pointer">This Form Only (${boxTitle})</span></span></div>
+                            <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_singleFormTitle" name="singleFormTitle" value="${boxTitle!}" checked/> <span onClick="$('#${formId}_Xlsx_singleFormTitle').click()" style="cursor: pointer">This Form Only (${boxTitle!})</span></span></div>
                             <div class="radio-align"><span><input type="radio" id="${formId}_Xlsx_allForms"        name="singleFormTitle" value=""/> <span onClick="$('#${formId}_Xlsx_allForms').click()" style="cursor: pointer">All Forms on This Page</span></span></div>
                         </div>
                     </div>
