@@ -13,7 +13,7 @@
         <datasource group-name="transactional" database-conf-name="db2i" schema-name="MOQUI">
             <inline-jdbc>
                 <xa-properties user="moqui" password="sss99206" serverName="172.16.1.2"
-                               cursorHold="false" threadUsed="false" databaseName="SPOKANE"/>
+                               cursorHold="false" threadUsed="false" databaseName="SPOKANE" dateFormat="iso"/>
             </inline-jdbc>
         </datasource>
     </entity-facade>
