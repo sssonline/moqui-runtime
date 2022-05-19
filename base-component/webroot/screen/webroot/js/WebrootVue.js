@@ -850,7 +850,7 @@ Vue.component('form-list', {
 /* ========== form field widget components ========== */
 Vue.component('date-time', {
     props: { id:String, name:{type:String,required:true}, value:String, type:{type:String,'default':'date-time'},
-        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String },
+        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String },
     template:
     '<div v-if="type==\'time\'" class="input-group time" :id="id">' +
         '<input type="text" class="form-control" :pattern="timePattern" :id="id?(id+\'_itime\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form">' +
@@ -862,11 +862,18 @@ Vue.component('date-time', {
     '</div>',
     methods: {
         focusDate: function() {
-            if (this.type === 'time' || this.autoYear === 'false') return;
+            if (this.type === 'time' || (this.autoYear === 'false' && this.autoMonth === 'false')) return;
             var inputEl = $(this.$refs.dateInput); var curVal = inputEl.val();
             if (!curVal || !curVal.length) {
-                var startYear = (this.autoYear && this.autoYear.match(/^[12]\d\d\d$/)) ? this.autoYear : new Date().getFullYear()
-                inputEl.val(startYear);
+                if (this.autoMonth && !(this.autoMonth === 'false')) {
+                    var nowDate = new Date();
+                    var startYear = (this.autoYear && this.autoYear.match(/^[12]\d\d\d$/)) ? this.autoYear : nowDate.getFullYear();
+                    var startMonth = this.autoMonth.match(/^[01]?\d$/) ? this.autoMonth : nowDate.getMonth() + 1;
+                    inputEl.val(startYear.toString() + '-' + startMonth.toString().padStart(2, '0'));
+                } else {
+                    var startYear = (this.autoYear && this.autoYear.match(/^[12]\d\d\d$/)) ? this.autoYear : new Date().getFullYear();
+                    inputEl.val(startYear);
+                }
             }
         },
         blurDate: function() {
