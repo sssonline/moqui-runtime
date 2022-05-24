@@ -605,7 +605,11 @@ Vue.component('m-form', {
                         if (opt.selected !== opt.defaultSelected) { changed = true; break; }
                     }
                 } else {
-                    changed = !targetDom.options[targetDom.selectedIndex].defaultSelected;
+                    try {
+                        changed = !targetDom.options[targetDom.selectedIndex].defaultSelected;
+                    } catch (error) {
+                        changed = true;
+                    }
                 }
             }
             // console.log("changed? " + changed + " node " + targetDom.nodeName + " type " + targetEl.attr("type") + " " + targetEl.attr("name") + " to " + targetDom.value + " default " + targetDom.defaultValue);
