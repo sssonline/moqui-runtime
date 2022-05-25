@@ -958,7 +958,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <label class="control-label col-sm-3" for="${formId}_Line_printerIP">${ec.getL10n().localize("Select Printer")}</label>
                         <div class="col-sm-9">
                             <drop-down id="${formId}_Line_printerIP" name="printerIP"
-                                       :server-search="true" :server-min-length="0" :options-load-init="true"
+                                       :server-search="false" :options-load-init="true" :allow-empty="false" :paginate="false"
                                        options-url="/apps/basalt/getNetworkPrinterList"></drop-down>
 
                         </div>
