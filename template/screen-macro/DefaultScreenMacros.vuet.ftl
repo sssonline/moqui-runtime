@@ -959,7 +959,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <div class="col-sm-9">
                             <drop-down id="${formId}_Line_printerIP" name="printerIP"
                                        :server-search="false" :options-load-init="true" :allow-empty="false" :paginate="false"
-                                       options-url="/apps/basalt/getNetworkPrinterList"></drop-down>
+                                       options-url="/apps/ScreenExtensions/getNetworkPrinterList"></drop-down>
 
                         </div>
                     </div>
