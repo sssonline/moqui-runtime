@@ -77,9 +77,16 @@ along with this software (see the LICENSE.md file). If not, see
         <script><![CDATA[
             File snapshotDir = new File((String) ec.factory.getRuntimePath() + '/db/snapshot')
             snapshotFiles = snapshotDir.exists() ? snapshotDir.listFiles() : null
+            snapshotMap = [:]
             snapshotList = []
-            if (snapshotFiles) for (File sfile in snapshotFiles)
-                if (!sfile.isDirectory() && sfile.getName().endsWith(".zip") && sfile.length() > 0) snapshotList.add(sfile)
+            if (snapshotFiles) {
+                for (File sfile in snapshotFiles) {
+                    if (!sfile.isDirectory() && sfile.getName().endsWith(".zip") && sfile.length() > 0) snapshotMap[sfile.lastModified()] = sfile
+                }
+            }
+            for (sKey in snapshotMap.keySet().sort().reverse()) {
+                snapshotList.add(snapshotMap[sKey])
+            }
         ]]></script>
     </actions>
     <widgets>
