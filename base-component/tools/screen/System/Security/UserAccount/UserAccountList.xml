@@ -82,6 +82,10 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="find"><header-field title="Find"><submit/></header-field>
                 <default-field><display text=" "/></default-field></field>
+            <field name="lastUpdatedStamp">
+                <header-field title="Last Updated" show-order-by="true"></header-field>
+                <default-field><display/></default-field>
+            </field>
         </form-list>
     </widgets>
 </screen>
