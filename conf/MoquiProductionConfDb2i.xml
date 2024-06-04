@@ -10,9 +10,9 @@
     <!-- NOTE: using the environment variable is relatively secure in a container environment, but for more security set it here instead -->
     <entity-facade query-stats="true">
         <!-- add datasource elements here to configure databases -->
-        <datasource group-name="transactional" database-conf-name="db2i" schema-name="MOQUI">
+        <datasource group-name="transactional" database-conf-name="db2i" schema-name="ASPEN">
             <inline-jdbc>
-                <xa-properties user="moqui" password="sss99206" serverName="172.16.1.2"
+                <xa-properties user="aspen" password="sss99206" serverName="127.0.0.1"
                                cursorHold="false" threadUsed="false" databaseName="SPOKANE" dateFormat="iso"/>
             </inline-jdbc>
         </datasource>
