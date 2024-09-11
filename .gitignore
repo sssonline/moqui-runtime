@@ -1,5 +1,6 @@
 
 # downloaded lib, generated, etc files
+/base-component/webroot/build
 /base-component/webroot/screen/webroot/libs
 /base-component/webroot/screen/webroot/js/*.min.js
 /base-component/webroot/screen/webroot/qz-tray
@@ -10,9 +11,8 @@
 /db/h2/
 /db/orientdb/databases/
 /db/snapshot/
-/elasticsearch/data/
-/elasticsearch/log/
-/elasticsearch/work/
+/elasticsearch*/
+/opensearch*/
 /jackrabbit/jackrabbit/
 /log/
 /sessions/

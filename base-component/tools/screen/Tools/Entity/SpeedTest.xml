@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Speed Test" begin-transaction="true">
 
     <transition name="speedTest"><default-response url="."/></transition>
@@ -395,7 +395,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                     // Render ArtifactHitSummary
                     startTime = System.nanoTime()
-                    for (int i = 0; i < calls; i++) screenTest.render("ArtifactHitSummary", null, null)
+                    for (int i = 0; i < calls; i++) screenTest.render("ArtifactHitSummary?artifactType=AT_XML_SCREEN", null, null)
                     milliseconds = ((System.nanoTime() - startTime) / 1E6)
                     performanceList.add([operation     : "Render System ArtifactHitSummary Screen", entity: "",
                                          calls         : calls, milliseconds: milliseconds, msPerCall: (milliseconds / calls),

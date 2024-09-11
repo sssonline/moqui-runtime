@@ -12,47 +12,78 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="false" track-artifact-hit="false" default-menu-include="false">
     <!-- NOTE: require-authentication=false is required to allow transitions to decide. -->
 
-    <!--
-    Send request to api_key to get a temporary login/api key to pass to other rest calls instead of username/password.
+    <!-- NOTE: the api_key transition was removed because there is no good use case, just use cases that are less secure and poorly thought through -->
+    <!-- NOTE: the moquiSessionToken transition was removed for security reasons, it opened a vector in a CSRF attack to acquire the session token at any time -->
 
-    A user must be authenticated for this request, and the key will be associated with that user. Each time this is
-    called a new key is issued as the key is one-way hashed when saved to the database. Keys expire after the number of
-    hours configured on the Moqui Conf XML file (in user-facade.login-key.@expire-hours). The default is 144 hours, some
-    may want a short time (like 1 hour) for more of a session like behavior, others may want to expire after months for
-    server clients and more of a utility API.
-
-    A client may know a key but not know the user credentials, ie for longer term issued keys. In this case don't use
-    this request to get a key, just use the API key in the header for requests.
-
-    An example request:
-
-    curl -X GET -H "Accept: text/plain" -u john.doe:moqui http://localhost:8080/rest/api_key
-
-    To see an error response (401) for the wrong password:
-
-    curl -X GET -H "Accept: text/plain" -u john.doe:foo -i http://localhost:8080/rest/api_key
-
-    Put the value from that request in the "api_key" header for authc on other requests.
-
-    curl -X GET -H "api_key: {apiKey}" http://localhost:8080/rest/s1/example/examples/TEST2
+    <!-- MFA Sequences:
+        already have code:
+        - login: submit username, password, and code
+        needs code sent:
+        - login: submit username/password, if user requires authc code get back MFA options info (authc factors) - server remembers user in session
+        - sendOtp: submit factorId in same session, if factor owned by remembered user then server sends code via email, SMS, etc
+        - verifyOtp: submit code in same session, if valid login user
     -->
-    <transition name="api_key" begin-transaction="false">
-        <actions><script>
-            try { ec.web.sendTextResponse(ec.user.getLoginKey()) }
-            catch (org.moqui.context.AuthenticationRequiredException are) { ec.web.sendError(401, are.message, are) }
-        </script></actions>
+
+    <!-- login: for client applications that use a Moqui UserAccount -->
+    <transition name="login" method="post" require-session-token="false">
+        <!-- NOTE: login is a transition here instead of a Service REST endpoint under /rest/s1/moqui/... as a special case to not require session token -->
+        <parameter name="username" required="true"/>
+        <parameter name="password" required="true"/>
+        <parameter name="code"/>
+        <actions>
+            <set field="loggedIn" from="ec.user.loginUser(username, password)"/>
+            <if condition="ec.message.hasError()"><script>ec.web.sendJsonResponse([loggedIn:false])</script></if>
+
+            <if condition="ec.web.sessionAttributes.moquiAuthcFactorRequired"><then>
+                <if condition="code"><then>
+                    <service-call name="org.moqui.impl.UserServices.validate#ExternalUserAuthcCode"
+                            in-map="[code:code]" out-map="validateOut"/>
+                    <if condition="validateOut.verified"><then>
+                        <script>ec.user.internalLoginUser(validateOut.username)</script>
+                        <return/>
+                    </then><else>
+                        <message type="danger" public="true">Authentication code is not valid</message>
+                    </else></if>
+                </then></if>
+
+                <!-- if we didn't return above send back info about user's authc factors -->
+                <service-call name="org.moqui.impl.UserServices.get#ExternalUserAuthcFactorInfo" out-map="factorInfoOut"/>
+                <script>ec.web.sendJsonResponse(factorInfoOut)</script>
+            </then><else>
+                <script>ec.web.sendJsonResponse([loggedIn:loggedIn])</script>
+            </else></if>
+        </actions>
         <default-response type="none"/>
     </transition>
-    <!-- Get a session token for clients that are not authenticated (no api_key) to use for all request methods other than GET -->
-    <transition name="moquiSessionToken" begin-transaction="false">
-        <actions><script>ec.web.sendTextResponse(ec.web.sessionToken)</script></actions>
+    <!-- sendOtp: ask the server to send a one-time password/code (via email, SMS, etc);
+            a user must be pre-authenticated via login and must own the UserAuthcFactor record specified with factorId;
+            factorId can be UserAccountEmail IFF user has no active authc factors configured -->
+    <transition name="sendOtp" method="post">
+        <parameter name="factorId" required="true"/>
+        <service-call name="org.moqui.impl.UserServices.send#ExternalAuthcCode" in-map="[factorId:factorId]"
+                web-send-json-response="true"/>
         <default-response type="none"/>
     </transition>
-    <!-- REST API calls from a browser or session aware client will have an active session, use this for explicit logout and terminate session -->
+    <!-- verifyOtp: submit an OTP code for pre-authenticated user (via login) to complete login -->
+    <transition name="verifyOtp" method="post">
+        <parameter name="code" required="true"/>
+        <actions>
+            <service-call name="org.moqui.impl.UserServices.validate#ExternalUserAuthcCode"
+                    in-map="[code:code]" out-map="validateOut"/>
+            <if condition="validateOut.verified"><then>
+                <set field="loggedIn" from="ec.user.internalLoginUser(validateOut.username)"/>
+                <script>ec.web.sendJsonResponse([loggedIn:loggedIn])</script>
+            </then><else>
+                <script>ec.web.sendError(403, ec.l10n.localize("Authentication code is not valid"))</script>
+            </else></if>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <!-- logout: REST API calls from a browser or session aware client will have an active session, use this for explicit logout and terminate session -->
     <transition name="logout" begin-transaction="false">
         <actions><script>
             if (ec.user.username) { ec.user.logoutUser(); ec.web.sendTextResponse("successful") }
@@ -60,6 +91,29 @@ along with this software (see the LICENSE.md file). If not, see
         </script></actions>
         <default-response type="none"/>
     </transition>
+    <!-- NOTE DEJ-2022-12 commented for security reasons described below, is not a critical hole and
+            requires a script injection sort of attack to exploit, but is generally more secure to
+            ONLY make the session token available on the FIRST request where it is generated
+            (ie after login, logout, session timeout, other session changes)
+    <transition name="userInfo" method="get" read-only="true">
+        <actions><script>
+            if (ec.user.username) {
+                // SECURITY NOTE: this returns the session token, used for multiple tabs/windows where
+                //   the session cookie for new session is updated by login in another tab so we have a
+                //   session cookie but not the token; this may need to be removed and another solution
+                //   found (if possible) for auto re-login in a tab after a user authc'ed in another tab
+                //   because this might open an attack vector and make the session token less helpful
+                //   for CSRF protection
+                ec.web.sendJsonResponse([ username:ec.user.username, userId:ec.user.userId, currencyUomId:ec.user.currencyUomId,
+                    timeZone:ec.user.timeZone?.toString(), locale:ec.user.locale?.toString(), sessionToken:ec.web.getSessionToken() ])
+            } else {
+                ec.web.sendJsonResponse([ username:null, userId:null, currencyUomId:ec.user.currencyUomId,
+                    timeZone:ec.user.timeZone?.toString(), locale:ec.user.locale?.toString() ])
+            }
+        </script></actions>
+        <default-response type="none"/>
+    </transition>
+    -->
 
     <!--
     EXAMPLES

@@ -44,99 +44,16 @@
    - goal would be to use FTL macros to transform more detailed XML into library specific output
  */
 
+moqui.urlExtensions = { js:'js', vue:'vue', vuet:'vuet' }
+
 // simple stub for define if it doesn't exist (ie no require.js, etc); mimic pattern of require.js define()
 if (!window.define) window.define = function(name, deps, callback) {
     if (!moqui.isString(name)) { callback = deps; deps = name; name = null; }
     if (!moqui.isArray(deps)) { callback = deps; deps = null; }
     if (moqui.isFunction(callback)) { return callback(); } else { return callback }
 };
-// map locale to a locale that exists in moment-with-locales.js
-moqui.localeMap = { 'zh':'zh-cn' };
-moqui.objToSearch = function(obj) {
-    var search = '';
-    if (moqui.isPlainObject(obj)) $.each(obj, function (key, value) { search = search + (search.length > 0 ? '&' : '') + key + '=' + value; });
-    return search;
-};
-moqui.searchToObj = function(search) {
-    if (!search || search.length === 0) { return {}; }
-    var newParams = {};
-    var parmList = search.split("&");
-    for (var i=0; i<parmList.length; i++) {
-        var parm = parmList[i]; var ps = parm.split("=");
-        if (ps.length > 1) {
-            var key = ps[0]; var value = ps[1]; var exVal = newParams[key];
-            if (exVal) { if (moqui.isArray(exVal)) { exVal.push(value); } else { newParams[key] = [exVal, value]; } }
-            else { newParams[key] = value; }
-        }
-    }
-    return newParams;
-};
 Vue.filter('decodeHtml', moqui.htmlDecode);
-moqui.format = function(value, format, type) {
-    // console.log('format ' + value + ' with ' + format + ' of type ' + type);
-    // number formatting: http://numeraljs.com/ https://github.com/andrewgp/jsNumberFormatter http://www.asual.com/jquery/format/
-    if (format && format.length) { format = format.replace(/a/,'A').replace(/d/,'D').replace(/y/,'Y'); } // change java date/time format to moment
-    if (type && type.length) {
-        type = type.toLowerCase();
-        if (type === "date") {
-            if (!format || format.length === 0) format = "YYYY-MM-DD";
-            return moment(value).format(format);
-        } else if (type === "time") {
-            if (!format || format.length === 0) format = "HH:mm:ss";
-            return moment(value).format(format);
-        } else if (type === "timestamp") {
-            if (!format || format.length === 0) format = "YYYY-MM-DD HH:mm";
-            return moment(value).format(format);
-        } else if (type === "bigdecimal" || type === "long" || type === "integer" || type === "double" || type === "float") {
-            return value; // TODO format numbers
-        } else {
-            console.warn('format type unknown: ' + type);
-        }
-    }
-    if (moqui.isNumber(value)) {
-        return value; // TODO format numbers
-    } else {
-        // is it a number or any sort of date/time that moment supports? if anything else return as-is
-        var momentVal = moment(value);
-        if (momentVal.isValid()) {
-            if (!format || format.length === 0) format = "YYYY-MM-DD HH:mm";
-            return momentVal.format(format);
-        }
-        // TODO
-        return value;
-    }
-};
 Vue.filter('format', moqui.format);
-
-/* ========== script and stylesheet handling methods ========== */
-moqui.loadScript = function(src) {
-    // make sure the script isn't loaded
-    var loaded = false;
-    $('head script').each(function(i, hscript) { if (hscript.src.indexOf(src) !== -1) loaded = true; });
-    if (loaded) return;
-    // add it to the header
-    var script = document.createElement('script'); script.src = src; script.async = false;
-    document.head.appendChild(script);
-};
-moqui.loadStylesheet = function(href, rel, type) {
-    if (!rel) rel = 'stylesheet'; if (!type) type = 'text/css';
-    // make sure the stylesheet isn't loaded
-    var loaded = false;
-    $('head link').each(function(i, hlink) { if (hlink.href.indexOf(href) !== -1) loaded = true; });
-    if (loaded) return;
-    // add it to the header
-    var link = document.createElement('link'); link.href = href; link.rel = rel; link.type = type;
-    document.head.appendChild(link);
-};
-moqui.retryInlineScript = function(src, count) {
-    try { eval(src); } catch(e) {
-        src = src.trim();
-        var retryTime = count <= 5 ? count*count*100 : 'N/A';
-        console.warn('inline script error ' + count + ' retry ' + retryTime + ' script: ' + src.slice(0, 80) + '...');
-        console.warn(e);
-        if (count <= 5) setTimeout(moqui.retryInlineScript, retryTime, src, count+1);
-    }
-};
 
 /* ========== notify and error handling ========== */
 moqui.notifyOpts = { delay:1500, timer:500, offset:{x:20,y:60}, placement:{from:'top',align:'right'}, z_index:1100, type:'success',
@@ -204,16 +121,29 @@ moqui.handleAjaxError = function(jqXHR, textStatus, errorThrown) {
     console.warn('ajax ' + textStatus + ' (' + jqXHR.status + '), message ' + errorThrown /*+ '; response: ' + resp*/);
     // console.error('respObj: ' + JSON.stringify(respObj));
     var notified = false;
-    if (respObj && moqui.isPlainObject(respObj)) { notified = moqui.notifyMessages(respObj.messageInfos, respObj.errors, respObj.validationErrors); }
-    else if (resp && moqui.isString(resp) && resp.length) { notified = moqui.notifyMessages(resp); }
+    if (jqXHR.status === 401) {
+        notified = moqui.notifyMessages(null, "No user authenticated");
+    } else {
+        if (respObj && moqui.isPlainObject(respObj)) {
+            notified = moqui.notifyMessages(respObj.messageInfos, respObj.errors, respObj.validationErrors);
+        } else if (resp && moqui.isString(resp) && resp.length) {
+            notified = moqui.notifyMessages(resp);
+        }
+    }
 
     // reload on 401 (Unauthorized) so server can remember current URL and redirect to login screen
     if (jqXHR.status === 401) {
         if (moqui.webrootVue) { window.location.href = moqui.webrootVue.currentLinkUrl; } else { window.location.reload(true); }
-    } else if (jqXHR.status === 0) { if (errorThrown.indexOf('abort') < 0) { var msg = 'Could not connect to server';
-        $.notify(new moqui.NotifyOptions(msg, null, 'danger', null), moqui.notifyOptsError); moqui.webrootVue.addNotify(msg, 'danger'); }
-    } else if (!notified) { var errMsg = 'Error: ' + errorThrown + ' (' + textStatus + ')';
-        $.notify(new moqui.NotifyOptions(errMsg, null, 'danger', null), moqui.notifyOptsError); moqui.webrootVue.addNotify(errMsg, 'danger');
+    } else if (jqXHR.status === 0) {
+        if (errorThrown.indexOf('abort') < 0) {
+            var msg = 'Could not connect to server';
+            $.notify(new moqui.NotifyOptions(msg, null, 'danger', null), moqui.notifyOptsError);
+            moqui.webrootVue.addNotify(msg, 'danger');
+        }
+    } else if (!notified) {
+        var errMsg = 'Error: ' + errorThrown + ' (' + textStatus + ')';
+        $.notify(new moqui.NotifyOptions(errMsg, null, 'danger', null), moqui.notifyOptsError);
+        moqui.webrootVue.addNotify(errMsg, 'danger');
     }
 };
 
@@ -221,12 +151,18 @@ moqui.handleAjaxError = function(jqXHR, textStatus, errorThrown) {
 moqui.componentCache = new moqui.LruMap(50);
 
 moqui.handleLoadError = function (jqXHR, textStatus, errorThrown) {
+    if (textStatus === 'abort') {
+        console.warn('load aborted: ' + textStatus + ' (' + jqXHR.status + '), message ' + errorThrown);
+        return;
+    }
     moqui.webrootVue.loading = 0;
     moqui.handleAjaxError(jqXHR, textStatus, errorThrown);
 };
 // NOTE: this may eventually split to change the activeSubscreens only on currentPathList change (for screens that support it)
 //     and if ever needed some sort of data refresh if currentParameters changes
 moqui.loadComponent = function(urlInfo, callback, divId) {
+    var jsExt = moqui.urlExtensions.js, vueExt = moqui.urlExtensions.vue, vuetExt = moqui.urlExtensions.vuet;
+
     var path, extraPath, search, bodyParameters, renderModes;
     if (typeof urlInfo === 'string') {
         var questIdx = urlInfo.indexOf('?');
@@ -237,28 +173,66 @@ moqui.loadComponent = function(urlInfo, callback, divId) {
         bodyParameters = urlInfo.bodyParameters; renderModes = urlInfo.renderModes;
     }
 
+    /* CACHE DISABLED: issue with more recent Vue JS where cached components don't re-render when assigned so screens don't load
+     * to reproduce: make a screen like a dashboad slow loading with a Thread.sleep(5000), from another screen select it
+     * in the menu and before it loads click on a link for another screen, won't load and gets into a bad state where
+     * nothing in the same path will load, need to somehow force it to re-render;
+     * note that vm.$forceUpdate() in subscreens-active component before return false did not work
     // check cache
     // console.info('component lru ' + JSON.stringify(moqui.componentCache.lruList));
     var cachedComp = moqui.componentCache.get(path);
     if (cachedComp) {
-        console.info('found cached component for path ' + path);
-        callback(cachedComp); return;
+        console.info('found cached component for path ' + path + ': ' + JSON.stringify(cachedComp));
+        callback(cachedComp);
+        return;
     }
+    */
 
     // prep url
     var url = path;
-    var isJsPath = (path.slice(-3) === '.js');
-    if (!isJsPath && urlInfo.renderModes && urlInfo.renderModes.indexOf("js") >= 0) {
+
+    // does the screen support vue? use http-vue-loader
+    if (urlInfo.renderModes && urlInfo.renderModes.indexOf(vueExt) >= 0) url += ('.' + vueExt);
+    if (url.slice(-vueExt.length) === vueExt) {
+        console.info("loadComponent vue " + url + (divId ? " id " + divId : ''));
+        var vueAjaxSettings = { type:"GET", url:url, error:moqui.handleLoadError, success: function(resp, status, jqXHR) {
+                if (jqXHR.status === 205) {
+                    var redirectTo = jqXHR.getResponseHeader("X-Redirect-To")
+                    moqui.webrootVue.setUrl(redirectTo);
+                    return;
+                }
+                // console.info(resp);
+                if (!resp) { callback(moqui.NotFound); }
+                var cacheControl = jqXHR.getResponseHeader("Cache-Control");
+                var isServerStatic = (cacheControl && cacheControl.indexOf("max-age") >= 0);
+                if (moqui.isString(resp) && resp.length > 0) {
+                    var vueCompObj = httpVueLoader.parse(resp, url.substr(0, url.lastIndexOf('/')+1));
+                    if (isServerStatic) { moqui.componentCache.put(path, vueCompObj); }
+                    callback(vueCompObj);
+                } else { callback(moqui.NotFound); }
+            }};
+        if (bodyParameters && !$.isEmptyObject(bodyParameters)) { vueAjaxSettings.type = "POST"; vueAjaxSettings.data = bodyParameters; }
+        return $.ajax(vueAjaxSettings);
+    }
+
+    // look for JavaScript
+    var isJsPath = (path.slice(-jsExt.length) === jsExt);
+    if (!isJsPath && urlInfo.renderModes && urlInfo.renderModes.indexOf(jsExt) >= 0) {
         // screen supports js explicitly so do that
-        url += '.js';
+        url += ('.' + jsExt);
         isJsPath = true;
     }
-    if (!isJsPath) url += '.vuet';
+    if (!isJsPath) url += ('.' + vuetExt);
     if (extraPath && extraPath.length > 0) url += ('/' + extraPath);
     if (search && search.length > 0) url += ('?' + search);
 
     console.info("loadComponent " + url + (divId ? " id " + divId : ''));
     var ajaxSettings = { type:"GET", url:url, error:moqui.handleLoadError, success: function(resp, status, jqXHR) {
+        if (jqXHR.status === 205) {
+            var redirectTo = jqXHR.getResponseHeader("X-Redirect-To")
+            moqui.webrootVue.setUrl(redirectTo);
+            return;
+        }
         // console.info(resp);
         if (!resp) { callback(moqui.NotFound); }
         var isServerStatic = (jqXHR.getResponseHeader("Cache-Control").indexOf("max-age") >= 0);
@@ -270,7 +244,7 @@ moqui.loadComponent = function(urlInfo, callback, divId) {
                     if (isServerStatic) { moqui.componentCache.put(path, jsCompObj); }
                     callback(jsCompObj);
                 } else {
-                    var htmlUrl = (path.slice(-3) === '.js' ? path.slice(0, -3) : path) + '.vuet';
+                    var htmlUrl = (path.slice(-jsExt.length) === jsExt ? path.slice(0, -jsExt.length) : path) + '.' + vuetExt;
                     $.ajax({ type:"GET", url:htmlUrl, error:moqui.handleLoadError, success: function (htmlText) {
                         jsCompObj.template = htmlText;
                         if (isServerStatic) { moqui.componentCache.put(path, jsCompObj); }
@@ -287,17 +261,17 @@ moqui.loadComponent = function(urlInfo, callback, divId) {
                 callback(compObj);
             }
         } else if (moqui.isPlainObject(resp)) {
-            if (resp.screenUrl && resp.screenUrl.length > 0) { this.$root.setUrl(resp.screenUrl); }
-            else if (resp.redirectUrl && resp.redirectUrl.length > 0) { window.location.replace(resp.redirectUrl); }
+            if (resp.screenUrl && resp.screenUrl.length) { moqui.webrootVue.setUrl(resp.screenUrl); }
+            else if (resp.redirectUrl && resp.redirectUrl.length) { window.location.replace(resp.redirectUrl); }
         } else { callback(moqui.NotFound); }
     }};
     if (bodyParameters && !$.isEmptyObject(bodyParameters)) { ajaxSettings.type = "POST"; ajaxSettings.data = bodyParameters; }
-    $.ajax(ajaxSettings);
+    return $.ajax(ajaxSettings);
 };
 
 /* ========== placeholder components ========== */
 moqui.NotFound = Vue.extend({ template: '<div id="current-page-root"><h4>Screen not found at {{this.$root.currentPath}}</h4></div>' });
-moqui.EmptyComponent = Vue.extend({ template: '<div id="current-page-root"><div class="spinner"><div></div></div></div>' });
+moqui.EmptyComponent = Vue.extend({ template: '<div id="current-page-root"><div class="spinner"><div>&nbsp;</div></div></div>' });
 
 /* ========== inline components ========== */
 Vue.component('m-link', {
@@ -306,8 +280,15 @@ Vue.component('m-link', {
     methods: { go: function(event) {
         if (event.button !== 0) { return; }
         if (this.confirmation && this.confirmation.length) { if (!window.confirm(this.confirmation)) { return; } }
-        if (this.loadId && this.loadId.length > 0) { this.$root.loadContainer(this.loadId, this.href); }
-        else { if (event.ctrlKey || event.metaKey) { window.open(this.linkHref, "_blank"); } else { this.$root.setUrl(this.linkHref); } }
+        if (this.loadId && this.loadId.length > 0) {
+            this.$root.loadContainer(this.loadId, this.href);
+        } else {
+            if (event.ctrlKey || event.metaKey) {
+                window.open(this.linkHref, "_blank");
+            } else {
+                this.$root.setUrl(this.linkHref);
+            }
+        }
     }},
     computed: { linkHref: function () { return this.$root.getLinkPath(this.href); } }
 });
@@ -342,7 +323,7 @@ Vue.component('container-box', {
     '<div :class="\'panel panel-\' + type">' +
         '<div class="panel-heading" @click.self="toggleBody">' +
             '<h5 v-if="title && title.length" @click="toggleBody">' +
-                '<i :class="[isBodyOpen?\'glyphicon glyphicon-chevron-down\':\'glyphicon glyphicon-chevron-right\']"/> ' +
+                '<i :class="[isBodyOpen?\'fa fa-chevron-down\':\'fa fa-chevron-right\']"/> ' +
                 '{{title}}</h5>' +
             '<slot name="header"></slot>' +
             '<div class="panel-toolbar"><slot name="toolbar"></slot></div></div>' +
@@ -458,8 +439,8 @@ Vue.component('tree-top', {
 Vue.component('tree-item', {
     template:
     '<li :id="model.id">' +
-        '<i v-if="isFolder" @click="toggle" class="glyphicon" :class="{\'glyphicon-chevron-right\':!open, \'glyphicon-chevron-down\':open}"></i>' +
-        '<i v-else class="glyphicon glyphicon-unchecked"></i>' +
+        '<i v-if="isFolder" @click="toggle" class="fa" :class="{\'fa-chevron-right\':!open, \'fa-chevron-down\':open}"></i>' +
+        '<i v-else class="fa fa-square-o"></i>' +
         ' <span @click="setSelected">' +
             '<m-link v-if="model.a_attr" :href="model.a_attr.urlText" :load-id="model.a_attr.loadId" :class="{\'text-success\':selected}">{{model.text}}</m-link>' +
             '<span v-if="!model.a_attr" :class="{\'text-success\':selected}">{{model.text}}</span>' +
@@ -512,10 +493,10 @@ Vue.component('m-editable', {
 
 /* ========== form components ========== */
 Vue.component('m-form', {
-    props: { action:{type:String,required:true}, method:{type:String,'default':'POST'},
+    props: { action:{type:String,required:true}, method:{type:String,'default':'POST'}, excludeEmptyFields:Boolean,
         submitMessage:String, submitReloadId:String, submitHideId:String, focusField:String, noValidate:Boolean },
     data: function() { return { fields:{}, fieldsChanged:{}, buttonClicked:null }},
-    template: '<form @submit.prevent="submitForm"><slot></slot></form>',
+    template: '<form @submit.prevent="submitForm" autocapitalize="off" autocomplete="off"><slot></slot></form>',
     methods: {
         submitForm: function submitForm() {
             var jqEl = $(this.$el);
@@ -529,8 +510,22 @@ Vue.component('m-form', {
                     setTimeout(function() { $btn.prop('disabled', false); }, 3000);
                 }
                 var formData = new FormData(this.$el);
-                formData.append('moquiSessionToken', this.$root.moquiSessionToken);
                 $.each(this.fields, function (key, value) { formData.append(key, value); });
+
+                var fieldsToRemove = [];
+                // NOTE: using iterator directly to avoid using 'for of' which requires more recent ES version (for minify, browser compatibility)
+                var formDataIterator = formData.entries()[Symbol.iterator]();
+                while (true) {
+                    var iterEntry = formDataIterator.next();
+                    if (iterEntry.done) break;
+                    var pair = iterEntry.value;
+                    var fieldName = pair[0];
+                    var fieldValue = pair[1];
+                    if (this.excludeEmptyFields && (!fieldValue || !fieldValue.length)) fieldsToRemove.push(fieldName);
+                }
+                for (var ftrIdx = 0; ftrIdx < fieldsToRemove.length; ftrIdx++) formData['delete'](fieldsToRemove[ftrIdx]);
+
+                formData.append('moquiSessionToken', this.$root.moquiSessionToken);
                 if (btnName) { formData.append(btnName, btnValue); }
 
                 // console.info('m-form parameters ' + JSON.stringify(formData));
@@ -615,12 +610,12 @@ Vue.component('m-form', {
             // console.log("changed? " + changed + " node " + targetDom.nodeName + " type " + targetEl.attr("type") + " " + targetEl.attr("name") + " to " + targetDom.value + " default " + targetDom.defaultValue);
             // console.log(targetDom.defaultValue);
             if (changed) {
-                this.fieldsChanged[targetEl.attr("name")] = true;
+                this.$set(this.fieldsChanged, targetEl.attr("name"), true);
                 targetEl.parents(".form-group").children("label").addClass("is-changed");
                 targetEl.parents(".form-group").find(".select2-selection").addClass("is-changed");
                 targetEl.addClass("is-changed");
             } else {
-                this.fieldsChanged[targetEl.attr("name")] = false;
+                this.$set(this.fieldsChanged, targetEl.attr("name"), false);
                 targetEl.parents(".form-group").children("label").removeClass("is-changed");
                 targetEl.parents(".form-group").find(".select2-selection").removeClass("is-changed");
                 targetEl.removeClass("is-changed");
@@ -647,7 +642,7 @@ Vue.component('m-form', {
 Vue.component('form-link', {
     props: { action:{type:String,required:true}, focusField:String, noValidate:Boolean, bodyParameterNames:Array },
     data: function() { return { fields:{} }},
-    template: '<form @submit.prevent="submitForm"><slot :clearForm="clearForm"></slot></form>',
+    template: '<form @submit.prevent="submitForm" autocapitalize="off" autocomplete="off"><slot :clearForm="clearForm"></slot></form>',
     methods: {
         submitForm: function() {
             var jqEl = $(this.$el);
@@ -721,16 +716,16 @@ Vue.component('form-paginate', {
     template:
     '<ul v-if="paginate" class="pagination">' +
         '<template v-if="paginate.pageIndex > 0">' +
-            '<li><a href="#" @click.prevent="setIndex(0)"><i class="glyphicon glyphicon-fast-backward"></i></a></li>' +
-            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex-1)" title="Paginate Backward: Hover over list, press Shift, and Scroll up"><i class="glyphicon glyphicon-backward"></i></a></li></template>' +
-        '<template v-else><li><span><i class="glyphicon glyphicon-fast-backward"></i></span></li><li><span><i class="glyphicon glyphicon-backward"></i></span></li></template>' +
+            '<li><a href="#" @click.prevent="setIndex(0)"><i class="fa fa-fast-backward"></i></a></li>' +
+            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex-1)" title="Paginate Backward: Hover over list, press Shift, and Scroll up"><i class="fa fa-backward"></i></a></li></template>' +
+        '<template v-else><li><span><i class="fa fa-fast-backward"></i></span></li><li><span><i class="fa fa-backward"></i></span></li></template>' +
         '<li v-for="prevIndex in prevArray"><a href="#" @click.prevent="setIndex(prevIndex)" title="Paginate Backward: Hover over list, press Shift, and Scroll up">{{prevIndex+1}}</a></li>' +
         '<li><m-link :href="$root.currentLinkPath + \'?pageIndex=\' + paginate.pageIndex">Page {{paginate.pageIndex+1}} of {{paginate.pageMaxIndex+1}} ({{paginate.pageRangeLow}} - {{paginate.pageRangeHigh}} of {{paginate.count}})</m-link></li>' +
         '<li v-for="nextIndex in nextArray"><a href="#" @click.prevent="setIndex(nextIndex)" title="Paginate Forward: Hover over list, press Shift, and Scroll down">{{nextIndex+1}}</a></li>' +
         '<template v-if="paginate.pageIndex < paginate.pageMaxIndex">' +
-            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex+1)" title="Paginate Forward: Hover over list, press Shift, and Scroll down"><i class="glyphicon glyphicon-forward"></i></a></li>' +
-            '<li><a href="#" @click.prevent="setIndex(paginate.pageMaxIndex)"><i class="glyphicon glyphicon-fast-forward"></i></a></li></template>' +
-        '<template v-else><li><span><i class="glyphicon glyphicon-forward"></i></span></li><li><span><i class="glyphicon glyphicon-fast-forward"></i></span></li></template>' +
+            '<li><a href="#" @click.prevent="setIndex(paginate.pageIndex+1)" title="Paginate Forward: Hover over list, press Shift, and Scroll down"><i class="fa fa-forward"></i></a></li>' +
+            '<li><a href="#" @click.prevent="setIndex(paginate.pageMaxIndex)"><i class="fa fa-fast-forward"></i></a></li></template>' +
+        '<template v-else><li><span><i class="fa fa-forward"></i></span></li><li><span><i class="fa fa-fast-forward"></i></span></li></template>' +
     '</ul>',
     computed: {
         prevArray: function() {
@@ -796,13 +791,13 @@ Vue.component('form-list', {
             '<slot name="headerForm"  :search="searchObj"></slot></form-link>' +
         '<div class="table-scroll-wrapper"><table class="table table-striped table-hover table-condensed" :id="idVal+\'_table\'"><thead>' +
             '<tr class="form-list-nav-row"><th :colspan="columns?columns:\'100\'"><nav class="form-list-nav">' +
-                '<button v-if="savedFinds || headerDialog" :id="idVal+\'_hdialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_hdialog\'" data-original-title="Find Options" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> Find Options</button>' +
-                '<button v-if="selectColumns" :id="idVal+\'_SelColsDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_SelColsDialog\'" data-original-title="Columns" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> Columns</button>' +
+                '<button v-if="savedFinds || headerDialog" :id="idVal+\'_hdialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_hdialog\'" data-original-title="Find Options" data-placement="bottom" class="btn btn-default"><i class="fa fa-share"></i> Find Options</button>' +
+                '<button v-if="selectColumns" :id="idVal+\'_SelColsDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_SelColsDialog\'" data-original-title="Columns" data-placement="bottom" class="btn btn-default"><i class="fa fa-share"></i> Columns</button>' +
                 '<form-paginate :paginate="paginate" :form-list="this"></form-paginate>' +
                 '<form-go-page :id-val="idVal" :form-list="this"></form-go-page>' +
                 '<a v-if="csvButton" :href="csvUrl" class="btn btn-default">CSV</a>' +
-                '<button v-if="textButton" :id="idVal+\'_TextDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_TextDialog\'" data-original-title="Text" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> Text</button>' +
-                '<button v-if="pdfButton" :id="idVal+\'_PdfDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_PdfDialog\'" data-original-title="PDF" data-placement="bottom" class="btn btn-default"><i class="glyphicon glyphicon-share"></i> PDF</button>' +
+                '<button v-if="textButton" :id="idVal+\'_TextDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_TextDialog\'" data-original-title="Text" data-placement="bottom" class="btn btn-default"><i class="fa fa-share"></i> Text</button>' +
+                '<button v-if="pdfButton" :id="idVal+\'_PdfDialog_button\'" type="button" data-toggle="modal" :data-target="\'#\'+idVal+\'_PdfDialog\'" data-original-title="PDF" data-placement="bottom" class="btn btn-default"><i class="fa fa-share"></i> PDF</button>' +
                 '<slot name="nav"></slot>' +
             '</nav></th></tr>' +
             '<slot name="header" :search="searchObj"></slot>' +
@@ -854,15 +849,15 @@ Vue.component('form-list', {
 /* ========== form field widget components ========== */
 Vue.component('date-time', {
     props: { id:String, name:{type:String,required:true}, value:String, type:{type:String,'default':'date-time'},
-        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String },
+        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String, minuteStep:{type:Number,'default':5 },
     template:
     '<div v-if="type==\'time\'" class="input-group time" :id="id">' +
         '<input type="text" class="form-control" :pattern="timePattern" :id="id?(id+\'_itime\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form">' +
-        '<span class="input-group-addon"><span class="glyphicon glyphicon-time"></span></span>' +
+        '<span class="input-group-addon"><span class="fa fa-clock-o"></span></span>' +
     '</div>' +
     '<div v-else class="input-group date" :id="id">' +
         '<input ref="dateInput" @focus="focusDate" @blur="blurDate" type="text" class="form-control" :id="id?(id+\'_idate\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form" :required="required == \'required\' ? true : false">' +
-        '<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>' +
+        '<span class="input-group-addon"><span class="fa fa-calendar"></span></span>' +
     '</div>',
     methods: {
         focusDate: function() {
@@ -909,7 +904,7 @@ Vue.component('date-time', {
         if (this.type === "time") {
             jqEl.datetimepicker({toolbarPlacement:'top', debug:false, showClose:true, showClear:true, showTodayButton:true, useStrict:true,
                 defaultDate:(value && value.length ? moment(value,this.formatVal) : null), format:format,
-                extraFormats:this.extraFormatsVal, stepping:5, locale:this.$root.locale,
+                extraFormats:this.extraFormatsVal, stepping:this.minuteStep, locale:this.$root.locale,
                 keyBinds: {up: function () { if(this.date()) this.date(this.date().clone().add(1, 'H')); },
                            down: function () { if(this.date()) this.date(this.date().clone().subtract(1, 'H')); },
                            'control up': null, 'control down': null,
@@ -923,7 +918,7 @@ Vue.component('date-time', {
         } else {
             jqEl.datetimepicker({toolbarPlacement:'top', debug:false, showClose:true, showClear:true, showTodayButton:true, useStrict:true,
                 defaultDate:(value && value.length ? moment(value,this.formatVal) : null), format:format,
-                extraFormats:this.extraFormatsVal, stepping:5, locale:this.$root.locale,
+                extraFormats:this.extraFormatsVal, stepping:this.minuteStep, locale:this.$root.locale,
                 keyBinds: {up: function () { if(this.date()) this.date(this.date().clone().add(1, 'd')); },
                            down: function () { if(this.date()) this.date(this.date().clone().subtract(1, 'd')); },
                            'alt up': function () { if(this.date()) this.date(this.date().clone().add(1, 'M')); },
@@ -953,17 +948,17 @@ Vue.component('date-period', {
     template:
     '<div v-if="fromThruMode"><date-time :name="name+\'_from\'" :id="id+\'_from\'" :form="form" :type="fromThruType" :value="fromDate"/> - ' +
         '<date-time :name="name+\'_thru\'" :id="id+\'_thru\'" :form="form" :type="fromThruType" :value="thruDate"/>' +
-        ' <i @click="toggleMode" class="glyphicon glyphicon-resize-vertical"></i></div>' +
+        ' <i @click="toggleMode" class="fa fa-arrows-v"></i></div>' +
     '<div v-else class="date-period" :id="id">' +
         '<drop-down :name="name+\'_poffset\'" :options="dateOffsets" :value="offset" :allow-empty="allowEmpty" :form="form"></drop-down> ' +
         '<drop-down :name="name+\'_period\'" :options="datePeriods" :value="period" :allow-empty="allowEmpty" :form="form"></drop-down> ' +
         '<date-time :name="name+\'_pdate\'" :id="id+\'_pdate\'" :form="form" type="date" :value="date"/>' +
-        ' <i @click="toggleMode" class="glyphicon glyphicon-resize-horizontal"></i></div>',
+        ' <i @click="toggleMode" class="fa fa-arrows-h"></i></div>',
     methods: { toggleMode: function() { this.fromThruMode = !this.fromThruMode; } },
     beforeMount: function() { if (((this.fromDate && this.fromDate.length) || (this.thruDate && this.thruDate.length))) this.fromThruMode = true; }
 });
 Vue.component('drop-down', {
-    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, prioritySearch:Boolean, multiple:String, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
+    props: { options:Array, value:[Array,String], combo:Boolean, allowEmpty:Boolean, prioritySearch:Boolean, multiple:String, submitOnSelect:Boolean, optionsUrl:String, ignoreKey:{type:Boolean,'default':false},
         serverSearch:{type:Boolean,'default':false}, serverDelay:{type:Number,'default':10}, serverMinLength:{type:Number,'default':1},
         optionsParameters:Object, labelField:String, valueField:String, dependsOn:Object, dependsOptional:Boolean,
         optionsLoadInit:Boolean, form:String, tooltip:String },
@@ -1020,7 +1015,8 @@ Vue.component('drop-down', {
     },
     mounted: function() {
         var jqEl = $(this.$el);
-        var vm = this; var opts = { minimumResultsForSearch:10 };
+        var vm = this;
+        var opts = { minimumResultsForSearch:10 };
         if (this.combo) { opts.tags = true; opts.tokenSeparators = [',',' ']; }
         if (this.multiple === "multiple") {
             opts.multiple = true; opts.closeOnSelect = false; opts.width = "100%";
@@ -1075,7 +1071,17 @@ Vue.component('drop-down', {
             }
         }
         this.s2Opts = opts;
-        jqEl.select2(opts).on('change', function () { vm.$emit('input', this.value); });
+        jqEl.select2(opts).on('change', function () {
+            vm.$emit('input', this.value);
+            if (vm.submitOnSelect) {
+                // TODO: find a better approach, perhaps pass down a reference to m-form or something so can refer to it more explicitly and handle Vue components in between
+                // this assumes the parent is m-form, if not it will blow up... alternatives are tricky
+                // vm.$nextTick(function() { vm.$parent.submitForm(); });
+                // TODO: implement this in some way so it doesn't immediately try to submit the form; because of
+                //    the mess that is select2 and how it is used here, the change even gets called on initial load if there is a value!
+                // TODO: if/when this is ever figured out, also add to on change listener in the watch => curData block below, and for the html render mode
+            }
+        });
         if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto" });
 
         // needed? was a hack for something, but interferes with closeOnSelect:false for multiple: .on('select2:select', function () { jqEl.select2('open').select2('close'); });
@@ -1114,7 +1120,7 @@ Vue.component('drop-down', {
                     var isInList = false;
                     var setValIsArray = moqui.isArray(setVal);
                     $.each(options, function(idx, curObj) {
-                        if (setValIsArray ? $.inArray(curObj.id, setVal) : curObj.id === setVal) isInList = true; });
+                        if (setValIsArray ? setVal.includes(curObj.id) : curObj.id === setVal) isInList = true; });
                     if (isInList) jqEl.val(setVal);
                 }
                 jqEl.trigger('change');
@@ -1190,7 +1196,7 @@ Vue.component('text-autocomplete', {
 Vue.component('subscreens-tabs', {
     data: function() { return { pathIndex:-1 }},
     template:
-    '<ul v-if="subscreens.length > 0" class="nav nav-tabs" role="tablist">' +
+    '<ul v-if="subscreens.length > 1" class="nav nav-tabs" role="tablist">' +
         '<li v-for="tab in subscreens" :class="{active:tab.active,disabled:tab.disableLink}">' +
             '<span v-if="tab.disabled">{{tab.title}}</span>' +
             '<m-link v-else :href="tab.pathWithParams">{{tab.title}}</m-link>' +
@@ -1210,7 +1216,10 @@ Vue.component('subscreens-active', {
     template: '<component :is="activeComponent"></component>',
     // method instead of a watch on pathName so that it runs even when newPath is the same for non-static reloading
     methods: { loadActive: function() {
-        var vm = this; var root = vm.$root; var pathIndex = vm.pathIndex; var curPathList = root.currentPathList;
+        var vm = this;
+        var root = vm.$root;
+        var pathIndex = vm.pathIndex;
+        var curPathList = root.currentPathList;
         var newPath = curPathList[pathIndex];
         var pathChanged = (this.pathName !== newPath);
         this.pathName = newPath;
@@ -1237,7 +1246,11 @@ Vue.component('subscreens-active', {
         if (navMenuItem && navMenuItem.renderModes) urlInfo.renderModes = navMenuItem.renderModes;
         console.info('subscreens-active loadActive pathIndex ' + pathIndex + ' pathName ' + vm.pathName + ' urlInfo ' + JSON.stringify(urlInfo));
         root.loading++;
-        moqui.loadComponent(urlInfo, function(comp) { vm.activeComponent = comp; root.loading--; });
+        root.currentLoadRequest = moqui.loadComponent(urlInfo, function(comp) {
+            root.currentLoadRequest = null;
+            vm.activeComponent = comp;
+            root.loading--;
+        });
         return true;
     }},
     mounted: function() { this.$root.addSubscreen(this); }
@@ -1245,14 +1258,22 @@ Vue.component('subscreens-active', {
 moqui.webrootVue = new Vue({
     el: '#apps-root',
     data: { basePath:"", linkBasePath:"", currentPathList:[], extraPathList:[], activeSubscreens:[], currentParameters:{}, bodyParameters:null,
-        navMenuList:[], navHistoryList:[], navPlugins:[], notifyHistoryList:[], lastNavTime:Date.now(), loading:0, activeContainers:{},
+        navMenuList:[], navHistoryList:[], navPlugins:[], notifyHistoryList:[],
+        lastNavTime:Date.now(), loading:0, currentLoadRequest:null, activeContainers:{}, urlListeners:[],
         moquiSessionToken:"", appHost:"", appRootPath:"", userId:"", locale:"en", notificationClient:null, qzVue:null },
     methods: {
         setUrl: function(url, bodyParameters) {
-            // always set bodyParameters, setting to null when not specified to clear out previous
-            this.bodyParameters = bodyParameters;
             // make sure any open modals are closed before setting current URL
             $('.modal.in').modal('hide');
+            // cancel current load if needed
+            if (this.currentLoadRequest) {
+                console.log("Aborting current page load currentLinkUrl " + this.currentLinkUrl + " url " + url);
+                this.currentLoadRequest.abort();
+                this.currentLoadRequest = null;
+                this.loading = 0;
+            }
+            // always set bodyParameters, setting to null when not specified to clear out previous
+            this.bodyParameters = bodyParameters;
             url = this.getLinkPath(url);
             // console.info('setting url ' + url + ', cur ' + this.currentLinkUrl);
             if (this.currentLinkUrl === url && url !== this.linkBasePath) {
@@ -1288,15 +1309,30 @@ moqui.webrootVue = new Vue({
                     var outerList = null;
                     // console.log("menu response " + outerListText);
                     try { outerList = JSON.parse(outerListText); } catch (e) { console.info("Error parson menu list JSON: " + e); }
-                    if (outerList && moqui.isArray(outerList)) { vm.navMenuList = outerList; /* console.info('navMenuList ' + JSON.stringify(outerList)); */ }
+                    if (outerList && moqui.isArray(outerList)) {
+                        vm.navMenuList = outerList;
+                        /* console.info('navMenuList ' + JSON.stringify(outerList)); */
+                    }
                 }});
 
                 // set the window URL
                 window.history.pushState(null, this.ScreenTitle, url);
+                // notify url listeners
+                this.urlListeners.forEach(function(callback) { callback(url, this) }, this);
+                // scroll to top
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
             }
         },
         setParameters: function(parmObj) {
-            if (parmObj) { this.$root.currentParameters = $.extend({}, this.$root.currentParameters, parmObj); }
+            if (parmObj) {
+                this.$root.currentParameters = $.extend({}, this.$root.currentParameters, parmObj);
+                // no path change so just need to update parameters on most recent history item
+                var curUrl = this.currentLinkUrl;
+                var curHistoryItem = this.navHistoryList[0];
+                curHistoryItem.pathWithParams = curUrl;
+                window.history.pushState(null, curHistoryItem.title || '', curUrl);
+            }
             this.$root.reloadSubscreens();
         },
         addSubscreen: function(saComp) {
@@ -1308,10 +1344,15 @@ moqui.webrootVue = new Vue({
             this.activeSubscreens.push(saComp);
         },
         reloadSubscreens: function() {
-            // console.info('reloadSubscreens currentParameters ' + JSON.stringify(this.currentParameters) + ' currentSearch ' + this.currentSearch);
-            var fullPathList = this.currentPathList; var activeSubscreens = this.activeSubscreens;
+            // console.info('reloadSubscreens path ' + JSON.stringify(this.currentPathList) + ' currentParameters ' + JSON.stringify(this.currentParameters) + ' currentSearch ' + this.currentSearch);
+            var fullPathList = this.currentPathList;
+            var activeSubscreens = this.activeSubscreens;
             console.info("reloadSubscreens currentPathList " + JSON.stringify(this.currentPathList));
-            if (fullPathList.length === 0 && activeSubscreens.length > 0) { activeSubscreens.splice(1); activeSubscreens[0].loadActive(); return; }
+            if (fullPathList.length === 0 && activeSubscreens.length > 0) {
+                activeSubscreens.splice(1);
+                activeSubscreens[0].loadActive();
+                return;
+            }
             for (var i=0; i<activeSubscreens.length; i++) {
                 if (i >= fullPathList.length) break;
                 // always try loading the active subscreen and see if actually loaded
@@ -1335,6 +1376,15 @@ moqui.webrootVue = new Vue({
         loadContainer: function(contId, url) { var contComp = this.activeContainers[contId];
             if (contComp) { contComp.load(url); } else { console.error("Container with ID " + contId + " not found, not loading url " + url); }},
         addNavPlugin: function(url) { var vm = this; moqui.loadComponent(this.appRootPath + url, function(comp) { vm.navPlugins.push(comp); }) },
+        addNavPluginsWait: function(urlList, urlIndex) { if (urlList && urlList.length > urlIndex) {
+            this.addNavPlugin(urlList[urlIndex]);
+            var vm = this;
+            if (urlList.length > (urlIndex + 1)) { setTimeout(function(){ vm.addNavPluginsWait(urlList, urlIndex + 1); }, 500); }
+        } },
+        addUrlListener: function(urlListenerFunction) {
+            if (this.urlListeners.indexOf(urlListenerFunction) >= 0) return;
+            this.urlListeners.push(urlListenerFunction);
+        },
         addNotify: function(message, type) {
             var histList = this.notifyHistoryList.slice(0);
             var nowDate = new Date();
@@ -1370,7 +1420,11 @@ moqui.webrootVue = new Vue({
         },
         getLinkPath: function(path) {
             if (this.appRootPath && this.appRootPath.length && path.indexOf(this.appRootPath) !== 0) path = this.appRootPath + path;
-            if (path.indexOf(this.basePath) === 0) path = path.replace(this.basePath, this.linkBasePath);
+            var pathList = path.split('/');
+            // element 0 in array after split is empty string from leading '/'
+            var wrapperIdx = this.appRootPath.split('/').length;
+            pathList[wrapperIdx] = this.linkBasePath.split('/').slice(-1);
+            path = pathList.join("/");
             return path;
         }
     },
@@ -1390,7 +1444,8 @@ moqui.webrootVue = new Vue({
 
             // update history and document.title
             var newTitle = (par ? par.title + ' - ' : '') + cur.title;
-            var curUrl = cur.pathWithParams; var questIdx = curUrl.indexOf("?");
+            var curUrl = cur.pathWithParams;
+            var questIdx = curUrl.indexOf("?");
             if (questIdx > 0) {
                 var excludeKeys = ["pageIndex", "orderBySelect", "orderByField", "moquiSessionToken"];
                 var parmList = curUrl.substring(questIdx+1).split("&");
@@ -1407,7 +1462,7 @@ moqui.webrootVue = new Vue({
                     if (eqIdx > 0) {
                         var key = parm.substring(0, eqIdx);
                         var value = parm.substring(eqIdx + 1);
-                        if (key.indexOf("_op") > 0 || key.indexOf("_not") > 0 || key.indexOf("_ic") > 0 || excludeKeys.indexOf(key) > 0 || key === value) continue;
+                        if (key.indexOf("_op") > 0 || key.indexOf("_not") > 0 || key.indexOf("_ic") > 0 || excludeKeys.indexOf(key) >= 0 || key === value) continue;
                         if (titleParms.length > 0) titleParms += ", ";
                         titleParms += decodeURIComponent(value);
                         dpCount++;
@@ -1453,9 +1508,17 @@ moqui.webrootVue = new Vue({
             get: function() { return moqui.objToSearch(this.currentParameters); },
             set: function(newSearch) { this.currentParameters = moqui.searchToObj(newSearch); }
         },
-        currentLinkUrl: function() { var srch = this.currentSearch; return this.currentLinkPath + (srch.length > 0 ? '?' + srch : ''); },
+        currentLinkUrl: function() { var search = this.currentSearch; return this.currentLinkPath + (search.length > 0 ? '?' + search : ''); },
         basePathSize: function() { return this.basePath.split('/').length - this.appRootPath.split('/').length; },
-        ScreenTitle: function() { return this.navMenuList.length > 0 ? this.navMenuList[this.navMenuList.length - 1].title : ""; }
+        ScreenTitle: function() { return this.navMenuList.length > 0 ? this.navMenuList[this.navMenuList.length - 1].title : ""; },
+        documentMenuList: function() {
+            var docList = [];
+            for (var i = 0; i < this.navMenuList.length; i++) {
+                var screenDocList = this.navMenuList[i].screenDocList;
+                if (screenDocList && screenDocList.length) { screenDocList.forEach(function(el) { docList.push(el);}); }
+            }
+            return docList;
+        }
     },
     created: function() {
         this.moquiSessionToken = $("#confMoquiSessionToken").val();
@@ -1463,8 +1526,19 @@ moqui.webrootVue = new Vue({
         this.basePath = $("#confBasePath").val(); this.linkBasePath = $("#confLinkBasePath").val();
         this.userId = $("#confUserId").val();
         this.locale = $("#confLocale").val(); if (moqui.localeMap[this.locale]) this.locale = moqui.localeMap[this.locale];
-        var vm = this; $('.confNavPluginUrl').each(function(idx, el) { vm.addNavPlugin($(el).val()); });
+
+        var confOuterStyle = $("#confOuterStyle").val();
+        if (confOuterStyle) {
+            var jqBody = $("body");
+            var currentStyle = jqBody.hasClass("bg-dark") ? "bg-dark" : "bg-light";
+            if (currentStyle !== confOuterStyle) { jqBody.removeClass(currentStyle); jqBody.addClass(confOuterStyle); }
+        }
+
         this.notificationClient = new moqui.NotificationClient((location.protocol === 'https:' ? 'wss://' : 'ws://') + this.appHost + this.appRootPath + "/notws");
+
+        var navPluginUrlList = [];
+        $('.confNavPluginUrl').each(function(idx, el) { navPluginUrlList.push($(el).val()); });
+        this.addNavPluginsWait(navPluginUrlList, 0);
     },
     mounted: function() {
         var jqEl = $(this.$el);

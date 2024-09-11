@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Messages" default-menu-index="1">
 
     <transition name="createLocalizedMessage">
@@ -30,7 +30,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <actions>
-        <entity-find entity-name="moqui.basic.LocalizedMessage" list="localizedMessageList">
+        <entity-find entity-name="moqui.basic.LocalizedMessage" list="localizedMessageList" use-clone="true">
             <search-form-inputs default-order-by="^original,locale"/></entity-find>
     </actions>
     <widgets>

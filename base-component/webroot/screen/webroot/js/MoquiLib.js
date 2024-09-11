@@ -1,15 +1,273 @@
 /* This software is in the public domain under CC0 1.0 Universal plus a Grant of Patent License. */
 
 var moqui = {
+    // map locale to a locale that exists in moment-with-locales.js
+    localeMap: { 'zh':'zh-cn' },
+
     isString: function(obj) { return typeof obj === 'string'; },
     isBoolean: function(obj) { return typeof obj === 'boolean'; },
     isNumber: function(obj) { return typeof obj === 'number'; },
     isArray: function(obj) { return Object.prototype.toString.call(obj) === '[object Array]'; },
     isFunction: function(obj) { return Object.prototype.toString.call(obj) === '[object Function]'; },
     isPlainObject: function(obj) { return obj != null && typeof obj == 'object' && Object.prototype.toString.call(obj) === '[object Object]'; },
+    deepCopy: function(inObject) {
+        if (typeof inObject !== "object" || inObject === null) { return inObject; }
+        var outObject = Array.isArray(inObject) ? [] : {};
+        var key, value;
+        for (key in inObject) { value = inObject[key]; outObject[key] = moqui.deepCopy(value); }
+        return outObject
+    },
+    arraysEqual: function (array1, array2, ignoreOrder) {
+        if (!array1 && !array2) return true;
+        if (!array1 && array2 && !array2.length) { return true; }
+        if (!array2 && array1 && !array1.length) { return true; }
+        if (!this.isArray(array1)) { return array1 === array2; }
+        if (!this.isArray(array2) || array1.length !== array2.length) { return false; }
+        for (var ai = 0; ai < array1.length; ai++) {
+            var array1Val = array1[ai];
+            if (ignoreOrder) {
+                if (array2.indexOf(array1Val) === -1) { return false; }
+            } else {
+                if (array2[ai] !== array1Val) { return false; }
+            }
+        }
+        return true;
+    },
+    fieldValuesDiff: function(fields, fieldsOriginal) {
+        var foundDiff = false;
+        var fieldsKeys = Object.keys(fields);
+        for (var fieldIdx in fieldsKeys) {
+            var name = fieldsKeys[fieldIdx];
+            var curValue = fields[name];
+            var originalValue = fieldsOriginal[name];
+            if (moqui.isArray(curValue)) {
+                if (!moqui.arraysEqual(curValue, originalValue, true)) {
+                    foundDiff = true;
+                    break;
+                }
+            } else {
+                if (!moqui.equalsOrPlaceholder(curValue, originalValue)) {
+                    foundDiff = true;
+                    break;
+                }
+            }
+        }
+        return foundDiff;
+    },
+    equalsOrPlaceholder: function(obj1, obj2) {
+        if (!obj1 && (!obj2 || !obj2.length)) { return true; }
+        if (!obj2 && (!obj1 || !obj1.length)) { return true; }
+        if ((!obj1 || !obj1.length) && obj2 && obj2.length >= 2 && obj2.slice(0,2) === "__") return true;
+        if ((!obj2 || !obj2.length) && obj1 && obj1.length >= 2 && obj1.slice(0,2) === "__") return true;
+        return obj1 === obj2;
+    },
+    objToSearch: function(obj) {
+        var search = "";
+        if (moqui.isPlainObject(obj)) $.each(obj, function (key, value) { search = search + (search.length > 0 ? '&' : '') + key + '=' + value; });
+        return search;
+    },
+    searchToObj: function(search) {
+        if (!search || search.length === 0) { return {}; }
+        var newParams = {};
+        var parmList = search.split("&");
+        for (var i=0; i<parmList.length; i++) {
+            var parm = parmList[i]; var ps = parm.split("=");
+            if (ps.length > 1) {
+                var key = ps[0]; var value = ps[1]; var exVal = newParams[key];
+                if (exVal) { if (moqui.isArray(exVal)) { exVal.push(value); } else { newParams[key] = [exVal, value]; } }
+                else { newParams[key] = value; }
+            }
+        }
+        return newParams;
+    },
+    parseHref: function(href) {
+        var result = { protocol:"", host:"", path:"/", query:{}, search:"", hash:"", name:"" }
+        var ssIdx = href.indexOf("://");
+        if (ssIdx >= 0) {
+            result.protocol = href.slice(0, ssIdx);
+            var slIdx = href.indexOf("/", ssIdx+3);
+            if (slIdx === -1) {
+                if (href.length > (ssIdx+3)) result.host = href.slice(ssIdx+3);
+                return result;
+            }
+            result.host = href.slice(ssIdx + 3, slIdx);
+            href = href.slice(slIdx);
+        }
+        var splitHash = href.split("#");
+        if (splitHash.length > 1 && splitHash[1].length) {
+            result.hash = splitHash[1];
+            href = splitHash[0];
+        }
+        var splitQuery = href.split("?");
+        if (splitQuery.length > 1 && splitQuery[1].length) {
+            var search = splitQuery[1];
+            result.search = search;
+            result.query = moqui.searchToObj(search);
+        }
+        var path = splitQuery[0];
+        result.path = path;
+        if (path.length) {
+            var lslIdx = path.lastIndexOf("/");
+            result.name = lslIdx === -1 ? path : path.slice(lslIdx+1);
+        }
+        return result;
+    },
+    makeHref: function(urlInfo) {
+        var href = "";
+        if (urlInfo.protocol && urlInfo.protocol.length) href += urlInfo.protocol + "://";
+        if (urlInfo.host && urlInfo.host.length) href += urlInfo.host;
+        href += urlInfo.path || "/";
+        if (urlInfo.search && urlInfo.search.length) {
+            href += "?" + urlInfo.search;
+        } else if (urlInfo.query) {
+            var queryStr = moqui.objToSearch(urlInfo.query);
+            if (queryStr && queryStr.length) href += "?" + queryStr;
+        }
+        if (urlInfo.hash && urlInfo.hash.length) href += "#" + urlInfo.hash;
+        return href;
+    },
 
     htmlEncode: function(value) { return $('<div/>').text(value).html(); },
     htmlDecode: function(value) { return $('<div/>').html(value).text(); },
+
+    /* ========== script and stylesheet handling methods ========== */
+    loadScript: function(src, callback, validate) {
+        // make sure the script isn't loaded
+        var loadedScript = null;
+        $('head script').each(function(i, hscript) { if (hscript.src.indexOf(src) !== -1) loadedScript = hscript; });
+        if (loadedScript) {
+            if (callback) {
+                if (validate) {
+                    moqui.retryValidateCallback(function() { callback(null, loadedScript); }, validate)
+                } else {
+                    callback(null, loadedScript);
+                }
+            }
+            return;
+        }
+        // add it to the header
+        var script = document.createElement('script'); script.src = src; script.async = false;
+        if (callback) {
+            script.onload = function() {
+                this.onerror = this.onload = null;
+                if (validate) {
+                    moqui.retryValidateCallback(function() { callback(null, script); }, validate)
+                } else {
+                    callback(null, script);
+                }
+            };
+            script.onerror = function() {
+                this.onerror = this.onload = null;
+                var error = new Error('Error loading script ' + this.src);
+                console.error(error);
+                callback(error, script);
+            };
+        }
+        document.head.appendChild(script);
+    },
+    retryValidateCallback: function(callback, validate, count) {
+        if (!validate || validate()) {
+            callback();
+        } else {
+            if (!count) count = 1;
+            var retryTime = count*count*100;
+            if (count <= 8) setTimeout(moqui.retryValidateCallback, retryTime, callback, validate, count+1);
+        }
+    },
+    loadStylesheet: function(href, rel, type) {
+        if (!rel) rel = 'stylesheet'; if (!type) type = 'text/css';
+        // make sure the stylesheet isn't loaded
+        var loaded = false;
+        $('head link').each(function(i, hlink) { if (hlink.href.indexOf(href) !== -1) loaded = true; });
+        if (loaded) return;
+        // add it to the header
+        var link = document.createElement('link'); link.href = href; link.rel = rel; link.type = type;
+        document.head.appendChild(link);
+    },
+    retryInlineScript: function(src, count) {
+        try { eval(src); } catch(e) {
+            src = src.trim();
+            var retryTime = count <= 5 ? count*count*100 : -1;
+            console.warn('inline script error ' + count + ' retry ' + retryTime + ' script: ' + src.slice(0, 80) + '...');
+            console.warn(e);
+            if (count <= 5) setTimeout(moqui.retryInlineScript, retryTime, src, count+1);
+        }
+    },
+
+    decimalSeparator: (1.1).toLocaleString().substring(1,2),
+    thousandSeparator: (1000).toLocaleString().substring(1,2),
+    isStringInteger: function(value) {
+        if (!moqui.isString(value)) return false;
+        // optional leading -; contains digits, thousandSeparator
+        for (var i = 0; i < value.length; i++) {
+            var curChar = value[i];
+            if (curChar >= '0' && curChar <= '9') continue;
+            if (i === 0 && curChar === '-') continue;
+            if (curChar === moqui.thousandSeparator) continue;
+            return false;
+        }
+        return true;
+    },
+    isStringNumber: function(value) {
+        if (!moqui.isString(value)) return false;
+        // optional leading -; contains digits, thousandSeparator, decimalSeparator
+        for (var i = 0; i < value.length; i++) {
+            var curChar = value[i];
+            if (curChar >= '0' && curChar <= '9') continue;
+            if (i === 0 && curChar === '-') continue;
+            if (curChar === moqui.thousandSeparator) continue;
+            if (curChar === moqui.decimalSeparator) continue;
+            return false;
+        }
+        return true;
+    },
+    parseNumber: function(value) {
+        var replValue = value.replaceAll(moqui.thousandSeparator, '');
+        return replValue.indexOf(moqui.decimalSeparator) === -1 ? parseInt(replValue) : parseFloat(replValue);
+    },
+
+    /* ========== general format function ========== */
+    format: function(value, format, type) {
+        // console.log('format ' + value + ' with ' + format + ' of type ' + type);
+        // number formatting: http://numeraljs.com/ https://github.com/andrewgp/jsNumberFormatter http://www.asual.com/jquery/format/
+        if (format && format.length) { format = format.replace(/a/,'A').replace(/d/,'D').replace(/y/,'Y'); } // change java date/time format to moment
+        if (type && type.length) {
+            type = type.toLowerCase();
+            if (type === "date") {
+                if (!format || format.length === 0) format = "YYYY-MM-DD";
+                return moment(value).format(format);
+            } else if (type === "time") {
+                if (!format || format.length === 0) format = "HH:mm:ss";
+                return moment(value).format(format);
+            } else if (type === "timestamp") {
+                if (!format || format.length === 0) format = "YYYY-MM-DD HH:mm";
+                return moment(value).format(format);
+            } else if (type === "bigdecimal" || type === "currency") {
+                // TODO format numbers with format string, localize
+                if (moqui.isNumber(value)) value = value.toFixed(2);
+                return ("" + value).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+            } else if (type === "long" || type === "integer" || type === "double" || type === "float") {
+                if (!moqui.isString(value)) value = "" + value;
+                // TODO format numbers with format string, localize
+                return value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+            } else {
+                console.warn('format type unknown: ' + type);
+            }
+        }
+        if (moqui.isNumber(value)) {
+            // TODO format numbers with format string, localize
+            return value.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+        } else {
+            // is it a number or any sort of date/time that moment supports? if anything else return as-is
+            var momentVal = moment(value);
+            if (momentVal.isValid()) {
+                if (!format || format.length === 0) format = "YYYY-MM-DD HH:mm";
+                return momentVal.format(format);
+            }
+            // TODO
+            return value;
+        }
+    },
 
     // return a function that delay the execution
     debounce: function(func, wait) {
@@ -84,7 +342,7 @@ var moqui = {
         if (!jsonObj) return;
         var notificationOptions = {};
         if (jsonObj.topic && jsonObj.topic.length) notificationOptions.tag = jsonObj.topic;
-        // consider options 'body' and 'icon' (icon URL, any way to use glyphicon class?)
+        // consider options 'body' and 'icon' (icon URL, any way to use icon class?)
         // Disable browser notifications because they're dumb
 /*
         if (window.Notification && Notification.permission === "granted") {
@@ -110,10 +368,10 @@ var moqui = {
         if (url) this.url = url;
         if (icon) { this.icon = icon; }
         else {
-            if (type === 'success') this.icon = 'glyphicon glyphicon-ok-sign';
-            else if (type === 'warning') this.icon = 'glyphicon glyphicon-warning-sign';
-            else if (type === 'danger') this.icon = 'glyphicon glyphicon-exclamation-sign';
-            else this.icon = 'glyphicon glyphicon-info-sign';
+            if (type === 'success') this.icon = 'fa fa-check-circle';
+            else if (type === 'warning') this.icon = 'fa fa-exclamation-triangle';
+            else if (type === 'danger') this.icon = 'fa fa-exclamation-circle';
+            else this.icon = 'fa fa-info-circle';
         }
     },
     NotifySettings: function(type) {
@@ -129,11 +387,22 @@ var moqui = {
     },
     notifyGrowl: function (jsonObj) {
         if (!jsonObj) return;
-        $.notify(new moqui.NotifyOptions(jsonObj.title, jsonObj.link, jsonObj.type, jsonObj.icon), new moqui.NotifySettings(jsonObj.type));
+        var notifySettings = new moqui.NotifySettings(jsonObj.type);
+        if (jsonObj.alertNoAutoHide === true) { notifySettings.delay = 0; }
+        $.notify(new moqui.NotifyOptions(jsonObj.title, jsonObj.link, jsonObj.type, jsonObj.icon), notifySettings);
         if (moqui.webrootVue) { moqui.webrootVue.addNotify(jsonObj.title, jsonObj.type); }
     },
 
     /* NotificationClient, note does not connect the WebSocket until notificationClient.registerListener() is called the first time */
+    /* Example Notification Listener Registration (note listener method defaults to displayNotify as in first example;
+         you can register more than one listener method for the same topic):
+     <#if ec.factory.serverContainer?has_content>
+       <script>
+         notificationClient.registerListener("ALL"); // register for all topics
+         notificationClient.registerListener("MantleEvent", notificationClient.displayNotify);
+       </script>
+     </#if>
+    */
     NotificationClient: function(webSocketUrl) {
         this.displayEnable = true;
         this.webSocketUrl = webSocketUrl;
@@ -153,7 +422,7 @@ var moqui = {
                 var callbacks = this.clientObj.topicListeners[jsonObj.topic];
                 if (callbacks) callbacks.forEach(function(callback) { callback(jsonObj, this) }, this);
                 var allCallbacks = this.clientObj.topicListeners["ALL"];
-                if (allCallbacks) allCallbacks.forEach(function(allCallbacks) { allCallbacks(jsonObj, this) }, this);
+                if (allCallbacks) allCallbacks.forEach(function(callback) { callback(jsonObj, this) }, this);
             };
             this.webSocket.onclose = function(event) {
                 console.log(event);
@@ -187,15 +456,36 @@ var moqui = {
             if (listenerArray.indexOf(callback) < 0) { listenerArray.push(callback); }
         };
     },
-    /* Example Notification Listener Registration (note listener method defaults to displayNotify as in first example;
-         you can register more than one listener method for the same topic):
-     <#if ec.factory.serverContainer?has_content>
-     <script>
-     notificationClient.registerListener("ALL"); // register for all topics
-     notificationClient.registerListener("MantleEvent", notificationClient.displayNotify);
-     </script>
-     </#if>
-    */
+
+    BasicWebSocketClient: function(webSocketUrl, onDataFunction) {
+        this.webSocketUrl = webSocketUrl;
+        this.onDataFunction = onDataFunction;
+        this.initWebSocket = function() {
+            this.webSocket = new WebSocket(this.webSocketUrl);
+            this.webSocket.clientObj = this;
+            this.webSocket.onopen = function(event) {
+                this.clientObj.tryReopenCount = 0;
+            };
+            this.webSocket.onmessage = function(event) {
+                this.clientObj.onDataFunction(event.data);
+            };
+            this.webSocket.onclose = function(event) {
+                console.log(event);
+                setTimeout(this.clientObj.tryReopen, 30*1000, this.clientObj);
+            };
+            this.webSocket.onerror = function(event) { console.log(event); };
+        };
+        this.tryReopen = function (clientObj) {
+            if ((!clientObj.webSocket || clientObj.webSocket.readyState === WebSocket.CLOSED || clientObj.webSocket.readyState === WebSocket.CLOSING) &&
+                (!clientObj.tryReopenCount || clientObj.tryReopenCount < 6)) {
+                console.log("Trying WebSocket reopen, count " + clientObj.tryReopenCount);
+                clientObj.tryReopenCount = (clientObj.tryReopenCount || 0) + 1;
+                clientObj.initWebSocket();
+                // no need to call this, onclose gets called when WS connect fails: setTimeout(clientObj.tryReopen, 30*1000, clientObj);
+            }
+        };
+        this.initWebSocket();
+    },
 
     LruMap: function(limit) {
         this.limit = limit; this.valueMap = {}; this.lruList = []; // end of list is least recently used
@@ -346,3 +636,13 @@ if (window.Inputmask) {
         }
     });
 }
+
+/* doesn't work because Chart.js is loaded as needed on screens, and after this loads, leaving commented here as would be nice:
+if (window.Chart) {
+    Chart.defaults.global.tooltips.callbacks.label = function(tooltipItem, data) {
+        var dataset = data.datasets[tooltipItem.datasetIndex];
+        var datasetLabel = dataset.label || '';
+        return datasetLabel + ": " + moqui.format(dataset.data[tooltipItem.index], null, "BigDecimal");
+    };
+}
+*/

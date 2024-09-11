@@ -12,41 +12,70 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
-        default-menu-index="1" menu-image="glyphicon glyphicon-dashboard" menu-image-type="icon">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-index="1" menu-image="fa fa-dashboard" menu-image-type="icon">
 
     <transition name="threadList"><default-response url="../ThreadList"/></transition>
     <transition name="systemExit">
         <actions><script>System.exit(0)</script></actions>
         <default-response url="."/>
     </transition>
+    <transition name="reInitElasticFacade">
+        <actions><script>ec.elastic.init()</script></actions>
+        <default-response url="."/>
+    </transition>
 
     <actions>
-        <set field="smap" from="ec.factory.getStatusMap()"/>
+        <set field="smap" from="ec.factory.getStatusMap(true)"/>
         <set field="loadPercent" from="(smap.Utilization.LoadPercent as BigDecimal).setScale(1, BigDecimal.ROUND_HALF_UP)"/>
         <set field="heapPercent" from="(smap.Utilization.HeapPercent as BigDecimal).setScale(1, BigDecimal.ROUND_HALF_UP)"/>
         <set field="diskPercent" from="(smap.Utilization.DiskPercent as BigDecimal).setScale(1, BigDecimal.ROUND_HALF_UP)"/>
         <set field="componentInfoList" from="orderMapList(ec.factory.getComponentInfoList(), ['^name'])"/>
 
         <set field="runtimeVersionMap" from="ec.factory.versionMap"/>
+
+        <set field="workerPool" from="ec.factory.workerPool"/>
+        <set field="jobWorkerPool" from="ec.service.jobWorkerPool"/>
+
+        <set field="esClientList" from="ec.elastic.getClientList()"/>
+        <set field="esServerInfoList" from="[]"/>
+        <iterate list="esClientList" entry="esClient">
+            <script><![CDATA[
+                try {
+                    esServerInfo = esClient.getServerInfo()
+                    if (esServerInfo) {
+                        esServerInfo.clientClusterName = esClient.getClusterName()
+                        esServerInfo.clusterLocation = esClient.getClusterLocation()
+                        esServerInfoList.add(esServerInfo)
+                    }
+                } catch (Throwable t) {
+                    ec.logger.error("Error getting info for Elastic Client", t)
+                    esServerInfoList.add([clientClusterName:esClient.getClusterName(),
+                        clusterLocation:esClient.getClusterLocation(), name:t.toString(), cluster_name:'ERROR'])
+                }
+            ]]></script>
+        </iterate>
     </actions>
     <widgets>
         <container-row><row-col md="6">
-            <container-box><box-header title="Server Admin"/><box-body>
-                <link url="../Cache" text="Cache Stats and Mgmt"/>
+            <container-box id="ServerAdmin"><box-header title="Server Admin"/><box-body>
+                <link url="../Cache" text="Cache Mgmt"/>
                 <link url="../Instance" text="Instance Mgmt"/>
                 <link url="../Print/Printer" text="Printers"/>
                 <link url="../Print/PrintJob" text="Print Jobs"/>
                 <link url="../ServiceJob" text="Service Jobs"/>
                 <link url="systemExit" text="Shut Down Server" confirmation="This will shut the server down immediately."/>
+                <link url="../HazelcastInfo" text="Hazelcast"/>
+                <link url="../ServiceJob/Jobs" text="Service Jobs"/>
+                <link url="../ServiceJob/JobRuns" text="Job Runs"/>
             </box-body></container-box>
-            <container-box><box-header title="Security"/><box-body>
+            <container-box id="Security"><box-header title="Security"/><box-body>
                 <link url="../Security/UserAccount" text="Users"/>
                 <link url="../Security/UserGroup" text="User Groups"/>
                 <link url="../Security/ArtifactGroup" text="Artifact Groups"/>
                 <link url="../Security/ActiveUsers" text="Active Users"/>
             </box-body></container-box>
-            <container-box><box-header title="Usage"/><box-body>
+            <container-box id="Usage"><box-header title="Usage"/><box-body>
                 <link url="../ArtifactHitSummary" text="Artifact Hit Summary"/>
                 <link url="../ArtifactHitBins" text="Artifact Hit Bins"/>
                 <link url="../AuditLog" text="Audit Log"/>
@@ -54,25 +83,29 @@ along with this software (see the LICENSE.md file). If not, see
                 <link url="../LogViewer" text="Log Viewer"/>
             </box-body></container-box>
         </row-col><row-col md="6">
-            <container-box><box-header title="Data Documents and Feeds"/><box-body>
+            <container-box id="DataDocumentsFeeds"><box-header title="Data Documents and Feeds"/><box-body>
                 <link url="../DataDocument/Search" text="Search"/>
                 <link url="../DataDocument/Export" text="Export"/>
                 <link url="../DataDocument/Index" text="Feed Index"/>
                 <link url="../DataDocument/Edit" text="Edit and Report Builder"/>
             </box-body></container-box>
-            <container-box><box-header title="Data Admin"/><box-body>
+            <container-box id="DataAdmin"><box-header title="Data Admin"/><box-body>
                 <link url="../Localization/Messages" text="L10n: Messages"/>
                 <link url="../Localization/EntityFields" text="L10n: Entity Fields"/>
                 <link url="../Resource" text="Resource Finder"/>
             </box-body></container-box>
-            <container-box><box-header title="Integration Admin"/><box-body>
+            <container-box id="IntegrationAdmin"><box-header title="Integration Admin"/><box-body>
                 <link url="../SystemMessage/Message" text="System Messages"/>
                 <link url="../SystemMessage/Remote" text="Message Remotes"/>
                 <link url="../SystemMessage/Type" text="Message Types"/>
                 <link url="../EntitySync" text="Entity Data Sync"/>
             </box-body></container-box>
         </row-col></container-row>
-        <container-box><box-header title="System Information"/><box-toolbar>
+        <container-box id="SystemInformation"><box-header title="System Information"/><box-toolbar>
+            <container-dialog id="RequestHeaders" button-text="Request Details">
+                <label text="${ec.web.getRequestDetails()}" type="pre"/>
+            </container-dialog>
+            <link url="reInitElasticFacade" text="Re-Init Elastic" confirmation="Try again to initialize configured Elastic Search Clients?"/>
             <link url="threadList" text="Thread List"/>
         </box-toolbar><box-body>
             <container-row><row-col sm="4">
@@ -80,7 +113,7 @@ along with this software (see the LICENSE.md file). If not, see
             </row-col><row-col sm="4">
                 <label text="Locale: ${Locale.getDefault()}" type="strong"/>
             </row-col><row-col sm="4">
-                <label text="Time Zone: ${TimeZone.getDefault().getID()} GMT${ec.l10n.format(TimeZone.getDefault().getRawOffset()/(1000*60*60), '+00.0;-00.0')} DST ${TimeZone.getDefault().getDSTSavings()/(1000*60*60)}" type="strong"/>
+                <label text="Time: ${ec.l10n.format(ec.user.nowTimestamp, null, null, TimeZone.getDefault())} ${TimeZone.getDefault().getID()} GMT${ec.l10n.format(TimeZone.getDefault().getRawOffset()/(1000*60*60), '+00.0;-00.0')} DST ${TimeZone.getDefault().getDSTSavings()/(1000*60*60)}" type="strong"/>
             </row-col></container-row>
             <container-row><row-col md="4">
                 <container-row><row-col xs="5"><label text="Heap Memory" type="strong"/></row-col>
@@ -137,14 +170,30 @@ along with this software (see the LICENSE.md file). If not, see
                 <label text="Java Statistics" type="strong"/>
                 <container-row><row-col xs="1"/><row-col xs="4"><label text="GC" type="strong"/></row-col>
                     <row-col xs="7"><label text="${smap.JavaStats.GcCount}, ${ec.l10n.format(smap.JavaStats.GcTimeSeconds, '#,##0.00')}s total"/></row-col></container-row>
-                <container-row><row-col xs="1"/><row-col xs="4"><label text="JIT" type="strong"/></row-col>
-                    <row-col xs="7"><label text="${smap.JavaStats.JIT}"/></row-col></container-row>
+                <!-- <container-row><row-col xs="1"/><row-col xs="4"><label text="JIT" type="strong"/></row-col>
+                    <row-col xs="7"><label text="${smap.JavaStats.JIT}"/></row-col></container-row> -->
                 <container-row><row-col xs="1"/><row-col xs="4"><label text="Compile Time" type="strong"/></row-col>
                     <row-col xs="7"><label text="${ec.l10n.format(smap.JavaStats.CompileTimeSeconds, '#,##0.00')}s total"/></row-col></container-row>
                 <container-row><row-col xs="1"/><row-col xs="4"><label text="Loaded Classes" type="strong"/></row-col>
                     <row-col xs="7"><label text="${smap.JavaStats.ClassesLoaded} (${smap.JavaStats.ClassesTotalLoaded} tot, ${smap.JavaStats.ClassesUnloaded} unl)"/></row-col></container-row>
                 <container-row><row-col xs="1"/><row-col xs="4"><label text="Threads" type="strong"/></row-col>
                     <row-col xs="7"><label text="${smap.JavaStats.ThreadCount} (${smap.JavaStats.PeakThreadCount} peak)"/></row-col></container-row>
+
+                <label text="Worker Pool" type="strong"/>
+                <container-row><row-col xs="1"/><row-col xs="4"><label text="Threads" type="strong"/></row-col>
+                    <row-col xs="7"><label text="Active: ${workerPool.getActiveCount()} Cur: ${workerPool.getPoolSize()} Max: ${workerPool.getMaximumPoolSize()}"
+                            style="${workerPool.getActiveCount() == workerPool.getMaximumPoolSize() ? 'text-warning' : ''}"/></row-col></container-row>
+                <container-row><row-col xs="1"/><row-col xs="4"><label text="Queue" type="strong"/></row-col>
+                    <row-col xs="7"><label text="Cur: ${workerPool.queue.size()} Rem: ${workerPool.queue.remainingCapacity()}"
+                            style="${workerPool.queue.remainingCapacity() == 0 ? 'text-danger' : (workerPool.queue.size() &gt; workerPool.queue.remainingCapacity() ? 'text-warning' : '')}"/></row-col></container-row>
+
+                <label text="Service Job Pool" type="strong"/>
+                <container-row><row-col xs="1"/><row-col xs="4"><label text="Threads" type="strong"/></row-col>
+                    <row-col xs="7"><label text="Active: ${jobWorkerPool.getActiveCount()} Cur: ${jobWorkerPool.getPoolSize()} Max: ${jobWorkerPool.getMaximumPoolSize()}"
+                            style="${jobWorkerPool.getActiveCount() == jobWorkerPool.getMaximumPoolSize() ? 'text-warning' : ''}"/></row-col></container-row>
+                <container-row><row-col xs="1"/><row-col xs="4"><label text="Queue" type="strong"/></row-col>
+                    <row-col xs="7"><label text="Cur: ${jobWorkerPool.queue.size()} Rem: ${jobWorkerPool.queue.remainingCapacity()}"
+                            style="${jobWorkerPool.queue.remainingCapacity() == 0 ? 'text-danger' : (jobWorkerPool.queue.size() &gt; jobWorkerPool.queue.remainingCapacity() ? 'text-warning' : '')}"/></row-col></container-row>
             </row-col></container-row>
         </box-body><box-body-nopad>
             <form-list name="DatasourceList" list="smap.DataSources" skip-form="true">
@@ -153,6 +202,18 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="database"><default-field><display/></default-field></field>
                 <field name="detail"><default-field><display/></default-field></field>
             </form-list>
+
+            <form-list name="EsServerInfoList" list="esServerInfoList" skip-form="true">
+                <field name="clientClusterName"><default-field title="Elastic Facade Cluster"><display/></default-field></field>
+                <field name="clusterLocation"><default-field title="Location"><display/></default-field></field>
+                <field name="esVersion" from="version?.number"><default-field title="ES Version"><display/></default-field></field>
+                <field name="name"><default-field title="ES Name"><display/></default-field></field>
+                <field name="cluster_name"><default-field title="ES Cluster"><display/></default-field></field>
+                <field name="esFlavor" from="version?.build_flavor"><default-field title="ES Flavor"><display/></default-field></field>
+                <field name="esMinWireCompat" from="version?.minimum_wire_compatibility_version"><default-field title="Wire Compat"><display/></default-field></field>
+                <field name="esMinIndexCompat" from="version?.minimum_index_compatibility_version"><default-field title="Index Compat"><display/></default-field></field>
+            </form-list>
+
             <label text="Framework: ${runtimeVersionMap.framework.toString()}" condition="runtimeVersionMap?.framework" type="div"/>
             <label text="Runtime: ${runtimeVersionMap.runtime.toString()}" condition="runtimeVersionMap?.runtime" type="div"/>
             <form-list name="ComponentInfoList" list="componentInfoList" skip-form="true">

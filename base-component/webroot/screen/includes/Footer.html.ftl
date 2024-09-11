@@ -2,7 +2,12 @@ ${sri.getAfterScreenWriterText()}
 
 <#-- Footer JavaScript -->
 <#list footer_scripts?if_exists as scriptLocation>
-    <script src="${sri.buildUrl(scriptLocation).url}"></script>
+    <#assign srcUrl = sri.buildUrl(scriptLocation).url>
+    <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
+</#list>
+<#list sri.getThemeValues("STRT_SCRIPT_FOOTER") as scriptLocation>
+    <#assign srcUrl = sri.buildUrl(scriptLocation).url>
+    <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
 </#list>
 <#assign scriptText = sri.getScriptWriterText()>
 <#if scriptText?has_content>

@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Data View Results" default-menu-index="1">
 
     <parameter name="dbViewEntityName" required="true"/>
@@ -34,7 +34,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="masterDef == null"><message error="true">Could not find master entity with name: ${masterMember.entityName}</message><return/></if>
 
         <entity-find-one entity-name="moqui.entity.view.DbViewEntity" value-field="fieldValues"/>
-        <entity-find entity-name="${dbViewEntityName}" list="dbViewList">
+        <entity-find entity-name="${dbViewEntityName}" list="dbViewList" use-clone="true">
             <search-form-inputs/>
         </entity-find>
     </actions>

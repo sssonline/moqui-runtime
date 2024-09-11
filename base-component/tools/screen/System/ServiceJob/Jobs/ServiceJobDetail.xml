@@ -12,7 +12,7 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Job Detail" default-menu-index="1">
 
     <parameter name="jobName" required="true"/>
@@ -54,7 +54,7 @@ along with this software (see the LICENSE.md file). If not, see
         <container-row><row-col md="6">
             <container-box><box-header title="Job Run Info"/><box-toolbar>
                 <link url="runJob" text="Run Job" confirmation="Run job now with current parameters?"/>
-                <link url="jobRunList" text="Job Runs" parameter-map="[jobName:jobName, startTime_poffset:'0', startTime_period:'Month']"/>
+                <link url="jobRunList" text="Job Runs" parameter-map="[jobName:jobName]"/>
             </box-toolbar><box-body>
                 <container-row>
                     <row-col md="2"><label text="Last Run" type="strong"/></row-col>
@@ -81,6 +81,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="expireLockTime"><default-field title="Expire Lock Minutes" tooltip="After this time job run locks are ignored, defaults to 1440 minutes (24 hours)">
                         <text-line size="4"/></default-field></field>
                     <field name="minRetryTime"><default-field title="Min Retry Minutes" tooltip="Min time to retry after error, defaults to 5 minutes">
+                        <text-line size="4"/></default-field></field>
+                    <field name="priority"><default-field tooltip="Lower numbers run first (ascending sort)">
                         <text-line size="4"/></default-field></field>
                     <field name="submitButton"><default-field title="Update Job"><submit/></default-field></field>
                     <field-layout>
@@ -116,7 +118,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <form-single name="CreateJobUser" transition="createJobUser">
                         <field name="jobName"><default-field><hidden/></default-field></field>
                         <field name="userId"><default-field title="User">
-                            <text-line ac-transition="getUserList" ac-min-length="2" size="60"/>
+                            <drop-down><dynamic-options transition="getUserList" server-search="true" min-length="2"/></drop-down>
                         </default-field></field>
                         <field name="receiveNotifications"><default-field>
                             <drop-down><option key="Y"/><option key="N"/></drop-down></default-field></field>

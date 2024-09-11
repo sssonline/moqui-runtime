@@ -13,8 +13,8 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
-        default-menu-title="Edit" default-menu-index="3">
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Edit Master" default-menu-index="3">
 
     <parameter name="aen" required="true"/><!-- Auto Entity Name -->
     <parameter name="den"/><!-- Detail Entity Name -->
@@ -50,8 +50,8 @@ along with this software (see the LICENSE.md file). If not, see
                     def response = ec.web.response
                     response.setContentType(fileType == 'JSON' ? 'application/json' : 'text/xml')
                     response.setCharacterEncoding("UTF-8")
-                    response.addHeader("Content-Disposition", "attachment; filename=\"${filename}\";")
-                    response.addHeader("Cache-Control", "no-cache, must-revalidate, private")
+                    response.setHeader("Content-Disposition", "attachment; filename=\"${filename}\";")
+                    response.setHeader("Cache-Control", "no-cache, must-revalidate, private")
                     edw.writer(response.getWriter())
                     noResponse = true
                 }
@@ -69,7 +69,7 @@ along with this software (see the LICENSE.md file). If not, see
             StringBuilder xmlBuilder = new StringBuilder()
             xmlBuilder.append('<?xml version="1.0" encoding="UTF-8"?>\n')
 
-            MNode screenNode = new MNode("screen", ["xmlns:xsi":"http://www.w3.org/2001/XMLSchema-instance", "xsi:noNamespaceSchemaLocation":"http://moqui.org/xsd/xml-screen-2.1.xsd"])
+            MNode screenNode = new MNode("screen", ["xmlns:xsi":"http://www.w3.org/2001/XMLSchema-instance", "xsi:noNamespaceSchemaLocation":"http://moqui.org/xsd/xml-screen-3.xsd"])
             MNode updateTransNode = screenNode.append("transition", [name:"update"])
             updateTransNode.append("service-call", [name:"update#${aen}".toString()])
             updateTransNode.append("default-response", [url:"."])
@@ -118,6 +118,9 @@ along with this software (see the LICENSE.md file). If not, see
             <auto-fields-entity entity-name="${aen}" include="pk" field-type="display"/>
             <auto-fields-entity entity-name="${aen}" include="nonpk" field-type="edit"/>
             <field name="aen"><default-field><hidden/></default-field></field>
+            <!-- NOTE: lastUpdatedStamp hidden field added by auto-fields-entity include=nonpk so don't add another hidden field here -->
+            <field name="lastUpdatedStamp"><default-field title="Last Updated">
+                <display format="yyyy-MM-dd HH:mm:ss.SSS z" also-hidden="false"/></default-field></field>
             <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
         </form-single>
         <link url="getFormXml" text="Get Form XML" link-type="anchor"/>

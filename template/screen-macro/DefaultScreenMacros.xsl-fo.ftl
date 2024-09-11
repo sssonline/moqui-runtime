@@ -10,7 +10,8 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-
+<#-- NOTE: no empty lines before the first #macro otherwise FTL outputs empty lines -->
+<#include "DefaultScreenMacros.any.ftl"/>
 <#macro attributeValue textValue>${Static["org.moqui.util.StringUtilities"].encodeForXmlAttribute(textValue, true)}</#macro>
 
 <#macro @element><fo:block>=== Doing nothing for element ${.node?node_name}, not yet implemented. ===</fo:block></#macro>
@@ -61,7 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
 </#macro>
 <#macro "section-include">
     <#if sri.doBoundaryComments()><!-- BEGIN section-include[@name=${.node["@name"]}] --></#if>
-    ${sri.renderSection(.node["@name"])}
+    ${sri.renderSectionInclude(.node)}
     <#if sri.doBoundaryComments()><!-- END   section-include[@name=${.node["@name"]}] --></#if>
 </#macro>
 
@@ -109,36 +110,6 @@ along with this software (see the LICENSE.md file). If not, see
     <#if sri.doBoundaryComments()><!-- END   include-screen[@location=${.node["@location"]}][@share-scope=${.node["@share-scope"]!}] --></#if>
 </#macro>
 
-<#-- ============== Render Mode Elements ============== -->
-<#macro "render-mode">
-<#if .node["text"]?has_content>
-    <#list .node["text"] as textNode><#if !textNode["@type"]?has_content || textNode["@type"] == "any"><#local textToUse = textNode/></#if></#list>
-    <#list .node["text"] as textNode><#if textNode["@type"]?has_content && textNode["@type"]?split(",")?seq_contains(sri.getRenderMode())><#local textToUse = textNode></#if></#list>
-    <#if textToUse??>
-        <#if textToUse["@location"]?has_content>
-          <#assign textLocation = ec.getResource().expandNoL10n(textToUse["@location"], "")>
-          <#if sri.doBoundaryComments() && !(textToUse["@no-boundary-comment"]! == "true")><!-- BEGIN render-mode.text[@location=${textLocation}][@template=${textToUse["@template"]!"true"}] --></#if>
-          <#-- NOTE: this still won't encode templates that are rendered to the writer -->
-          <#lt><#if .node["@encode"]! == "true">${sri.renderText(textLocation, textToUse["@template"]!)?html}<#else>${sri.renderText(textLocation, textToUse["@template"]!)}</#if>
-          <#if sri.doBoundaryComments()><!-- END   render-mode.text[@location=${textLocation}][@template=${textToUse["@template"]!"true"}] --></#if>
-        </#if>
-        <#assign inlineTemplateSource = textToUse?string/>
-        <#if inlineTemplateSource?has_content>
-    <#if sri.doBoundaryComments() && !(textToUse["@no-boundary-comment"]! == "true")><!-- BEGIN render-mode.text[inline][@template=${textToUse["@template"]!"true"}] --></#if>
-          <#if !textToUse["@template"]?has_content || textToUse["@template"] == "true">
-            <#assign inlineTemplate = [inlineTemplateSource, sri.getActiveScreenDef().location + ".render_mode.text"]?interpret>
-            <#lt><@inlineTemplate/>
-          <#else>
-            <#lt><#if .node["@encode"]! == "true">${inlineTemplateSource?html}<#else>${inlineTemplateSource}</#if>
-          </#if>
-          <#if sri.doBoundaryComments()><!-- END   render-mode.text[inline][@template=${textToUse["@template"]!"true"}] --></#if>
-        </#if>
-    </#if>
-</#if>
-</#macro>
-
-<#macro text><#-- do nothing, is used only through "render-mode" --></#macro>
-
 <#-- ================== Standalone Fields ==================== -->
 <#macro link>
     <fo:block><@linkFormLink .node/></fo:block>
@@ -158,6 +129,7 @@ along with this software (see the LICENSE.md file). If not, see
         <#if linkText == "null"><#assign linkText = ""></#if>
         <#assign urlInstance = sri.makeUrlByType(linkNode["@url"], linkNode["@url-type"]!"transition", linkNode, linkNode["@expand-transition-url"]!"true")>
         <#if linkNode["@url-noparam"]! == "true"><#assign urlText = urlInstance.url/><#else><#assign urlText = urlInstance.urlWithParams/></#if>
+        <#assign urlText = urlText?replace("/apps/", "/vapps/")/>
         <fo:basic-link external-destination="${urlText?xml}" color="blue"><@attributeValue linkText/></fo:basic-link>
     </#if>
 </#macro>
@@ -378,7 +350,7 @@ along with this software (see the LICENSE.md file). If not, see
 
 <#macro fieldName widgetNode><#assign fieldNode=widgetNode?parent?parent/>${fieldNode["@name"]?html}<#if isMulti?? && isMulti && listEntryIndex??>_${listEntryIndex}</#if></#macro>
 <#macro fieldId widgetNode><#assign fieldNode=widgetNode?parent?parent/>${fieldNode?parent["@name"]}_${fieldNode["@name"]}<#if listEntryIndex??>_${listEntryIndex}</#if></#macro>
-<#macro fieldTitle fieldSubNode><#assign titleValue><#if fieldSubNode["@title"]?has_content>${fieldSubNode["@title"]}<#else><#list fieldSubNode?parent["@name"]?split("(?=[A-Z])", "r") as nameWord>${nameWord?cap_first?replace("Id", "ID")}<#if nameWord_has_next> </#if></#list></#if></#assign>${ec.l10n.localize(titleValue)}</#macro>
+<#macro fieldTitle fieldSubNode><#assign titleValue><#if fieldSubNode["@title"]?has_content>${ec.getResource().expand(fieldSubNode["@title"], "")}<#else><#list fieldSubNode?parent["@name"]?split("(?=[A-Z])", "r") as nameWord>${nameWord?cap_first?replace("Id", "ID")}<#if nameWord_has_next> </#if></#list></#if></#assign>${ec.l10n.localize(titleValue)}</#macro>
 
 <#macro field><#-- shouldn't be called directly, but just in case --><#recurse/></#macro>
 <#macro "conditional-field"><#-- shouldn't be called directly, but just in case --><#recurse/></#macro>
@@ -413,10 +385,18 @@ along with this software (see the LICENSE.md file). If not, see
     <#if .node["@text"]?has_content>
         <#assign fieldValue = ec.resource.expand(.node["@text"], "")>
         <#if .node["@currency-unit-field"]?has_content>
-            <#assign fieldValue = ec.l10n.formatCurrency(fieldValue, ec.resource.expression(.node["@currency-unit-field"], ""))>
+            <#if .node["@currency-hide-symbol"]! == "true">
+                <#assign fieldValue = ec.l10n.formatCurrencyNoSymbol(fieldValue, ec.resource.expression(.node["@currency-unit-field"], ""))>
+            <#else>
+                <#assign fieldValue = ec.l10n.formatCurrency(fieldValue, ec.resource.expression(.node["@currency-unit-field"], ""))>
+            </#if>
         </#if>
     <#elseif .node["@currency-unit-field"]?has_content>
-        <#assign fieldValue = ec.l10n.formatCurrency(sri.getFieldValue(.node?parent?parent, ""), ec.resource.expression(.node["@currency-unit-field"], ""))>
+        <#if .node["@currency-hide-symbol"]! == "true">
+            <#assign fieldValue = ec.l10n.formatCurrencyNoSymbol(sri.getFieldValue(.node?parent?parent, ""), ec.resource.expression(.node["@currency-unit-field"], ""))>
+        <#else>
+            <#assign fieldValue = ec.l10n.formatCurrency(sri.getFieldValue(.node?parent?parent, ""), ec.resource.expression(.node["@currency-unit-field"], ""))>
+        </#if>
     <#else>
         <#assign fieldValue = sri.getFieldValueString(.node)>
     </#if>

@@ -12,7 +12,7 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-include="false">
 
     <parameter name="visitId" required="true"/>
@@ -23,9 +23,10 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find-one entity-name="moqui.server.Visit" value-field="visit"/>
+        <if condition="visit == null"><return error="true" message="Visit not found with ID ${visitId}"/></if>
         <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
             <field-map field-name="userId" from="visit.userId"/></entity-find-one>
-        <entity-find entity-name="moqui.server.ArtifactHit" list="artifactHitList">
+        <entity-find entity-name="moqui.server.ArtifactHit" list="artifactHitList" use-clone="true">
             <search-form-inputs default-order-by="startDateTime"/>
             <econdition field-name="visitId"/>
         </entity-find>
@@ -94,7 +95,8 @@ along with this software (see the LICENSE.md file). If not, see
         </widgets></section>
 
         <form-list name="VisitArtifactHitList" list="artifactHitList" skip-form="true" header-dialog="true" select-columns="true">
-            <hidden-parameters><parameter name="visitId"/></hidden-parameters>
+            <field name="visitId"><header-field><hidden/></header-field></field>
+
             <field name="startDateTime"><header-field show-order-by="true"><date-period time="true"/></header-field>
                 <default-field><display/></default-field></field>
             <field name="userId"><default-field><display/></default-field></field>

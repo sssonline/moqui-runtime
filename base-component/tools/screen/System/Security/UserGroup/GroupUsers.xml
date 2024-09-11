@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-index="2">
 
     <parameter name="userGroupId" required="true"/>
@@ -54,7 +54,7 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="CreateUserGroupMember" transition="createUserGroupMember">
                 <field name="userGroupId"><default-field><hidden/></default-field></field>
                 <field name="userId"><default-field title="User">
-                    <text-line ac-transition="getUserList" ac-min-length="2" size="60"/>
+                    <drop-down><dynamic-options transition="getUserList" server-search="true" min-length="2"/></drop-down>
                 </default-field></field>
                 <field name="fromDate" from="ec.user.nowTimestamp"><default-field><date-time/></default-field></field>
                 <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
