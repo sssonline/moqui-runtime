@@ -849,7 +849,7 @@ Vue.component('form-list', {
 /* ========== form field widget components ========== */
 Vue.component('date-time', {
     props: { id:String, name:{type:String,required:true}, value:String, type:{type:String,'default':'date-time'},
-        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String, minuteStep:{type:Number,'default':5 },
+        size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String, minuteStep:{type:Number,'default':5 } },
     template:
     '<div v-if="type==\'time\'" class="input-group time" :id="id">' +
         '<input type="text" class="form-control" :pattern="timePattern" :id="id?(id+\'_itime\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form">' +
