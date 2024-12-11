@@ -26,6 +26,12 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response url="."/></transition>
     <transition name="disableUserAccount"><service-call name="org.moqui.impl.UserServices.disable#UserAccount"/>
         <default-response url="."/></transition>
+    <transition name="disableUserAccount">
+        <actions>
+            <service-call name="update#moqui.security.UserAccount" in-map="[userId:userId, disabled:'Y', disabledDateTime:null, hasLoggedOut:'Y']"/>
+        </actions>
+        <default-response url="."/>
+    </transition>
     <transition name="resetPassword"><service-call name="org.moqui.impl.UserServices.reset#Password"/>
         <default-response url="."/></transition>
 
@@ -41,6 +47,19 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response url="/"/>
         <error-response url="."/>
     </transition>
+
+
+    <transition name="logoutUser">
+        <actions>
+            <entity-find-one entity-name="moqui.security.UserAccount" value-field="theUser">
+                <field-map field-name="userId"/>
+            </entity-find-one>
+            <set field="theUser.hasLoggedOut" value="Y"/>
+            <service-call name="update#moqui.security.UserAccount" in-map="theUser"/>
+        </actions>
+        <default-response url="."/>
+    </transition>
+
 
     <transition name="visitList"><default-response url="../../../Visit/VisitList"/></transition>
     <transition name="visitDetail"><default-response url="../../../Visit/VisitDetail"/></transition>
@@ -124,13 +143,27 @@ along with this software (see the LICENSE.md file). If not, see
                     </form-single>
                 </container-dialog>
 
-                <link url="enableUserAccount" text="Enable Account" parameter-map="[userId:userId]" condition="userAccount.disabled == 'Y'"/>
-                <link url="disableUserAccount" text="Disable Account" parameter-map="[userId:userId]" condition="userAccount.disabled != 'Y'"/>
-                <link url="resetPassword" text="Reset Password" parameter-map="[userId:userAccount.userId]" condition="userAccount.emailAddress"
-                        confirmation="Generate reset password and send by email to ${userAccount.emailAddress}?"/>
+                <link url="enableUserAccount"
+                      text="Enable Account"
+                      parameter-map="[userId:userId]"
+                      condition="userAccount.disabled == 'Y'"/>
+                <link url="disableUserAccount"
+                      text="Disable Account"
+                      parameter-map="[userId:userId]"
+                      condition="userAccount.disabled != 'Y'"
+                      confirmation="Are you sure you wish to Disable and Logout this User?"/>
+                <link url="logoutUser"
+                      text="Logout User"
+                      parameter-map="[userId:userId]"
+                      confirmation="Are you sure you wish to Logout this User?"/>
+                <link url="resetPassword"
+                      text="Reset Password"
+                      parameter-map="[userId:userAccount.userId]"
+                      condition="userAccount.emailAddress"
+                      confirmation="Generate reset password and send by email to ${userAccount.emailAddress}?"/>
                 <link url="loginAs" text="Login As" confirmation="Login as ${userAccount.username}?"
-                        condition="ec.user.hasPermission('ADMIN_LOGIN_AS') &amp;&amp; ec.user.username != userAccount.username"
-                        parameter-map="[loginAsUsername:userAccount.username]"/>
+                      condition="ec.user.hasPermission('ADMIN_LOGIN_AS') &amp;&amp; ec.user.username != userAccount.username"
+                      parameter-map="[loginAsUsername:userAccount.username]"/>
 
                 <container-dialog id="AuditLogDialog" button-text="Audit Log" width="960">
                     <form-list name="AuditLogList" list="auditLogList" skip-form="true">
