@@ -101,7 +101,7 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="ExportData" transition="exportSnapshot">
                 <!-- NOTE: add entities to exclude?, maybe ArtifactHit by default? -->
                 <field name="entitiesToSkip">
-                    <default-field><drop-down allow-multiple="true" size="80" no-current-selected-key="moqui.server.ArtifactHit,moqui.server.ArtifactHitBin,moqui.entity.EntityAuditLog,moqui.security.user.NotificationMessage,basalt.service.TemporaryDownloadFile">
+                    <default-field><drop-down allow-multiple="true" size="80" no-current-selected-key="moqui.server.ArtifactHit,moqui.server.ArtifactHitBin,moqui.entity.EntityAuditLog,moqui.security.user.NotificationMessage,moqui.security.user.NotificationMessageUser,basalt.service.TemporaryDownloadFile">
                         <list-options list="ec.entity.getAllEntitiesInfo('fullEntityName', null, false, true)" key="${fullEntityName}"/>
                     </drop-down></default-field>
                 </field>
