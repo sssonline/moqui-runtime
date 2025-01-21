@@ -44,6 +44,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="serverPort"><default-field><text-line size="5" default-value="631"/></default-field></field>
                 <field name="printerName"><default-field tooltip="Must match name on server exactly">
                     <text-line size="40"/></default-field></field>
+                <field name="outputQueueLibrary">
+                    <default-field>
+                        <text-line size="15"/>
+                    </default-field>
+                </field>
                 <field name="description"><default-field><text-line size="40"/></default-field></field>
                 <field name="location"><default-field><text-line size="40"/></default-field></field>
                 <field name="submitButton"><default-field title="Create Printer"><submit/></default-field></field>
@@ -69,6 +74,11 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="printerName">
                 <header-field show-order-by="true"><text-find size="15" hide-options="true"/></header-field>
                 <default-field><display/></default-field>
+            </field>
+            <field name="outputQueueLibrary">
+                <default-field>
+                    <display/>
+                </default-field>
             </field>
             <field name="description">
                 <header-field show-order-by="true"><text-find size="15" hide-options="true"/></header-field>
