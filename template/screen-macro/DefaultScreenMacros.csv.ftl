@@ -237,7 +237,7 @@ on the same screen to increase reusability of those screens -->
 <#macro "drop-down">
     <#assign options = sri.getFieldOptions(.node)>
     <#assign currentValue = sri.getFieldValueString(.node)/>
-    <#if !currentValue?has_content><#assign currentValue = .node["@no-current-selected-key"]!""/></#if>
+    <#if !currentValue?has_content><#assign currentValue = ec.getResource().expandNoL10n(.node["@no-current-selected-key"]!, "")/></#if>
     <#t><@csvValue (options.get(currentValue))!(currentValue)/>
 </#macro>
 
@@ -249,7 +249,7 @@ on the same screen to increase reusability of those screens -->
 <#macro "radio">
     <#assign options = {"":""}/><#assign options = sri.getFieldOptions(.node)>
     <#assign currentValue = sri.getFieldValueString(.node)/>
-    <#if !currentValue?has_content><#assign currentValue = .node["@no-current-selected-key"]!""/></#if>
+    <#if !currentValue?has_content><#assign currentValue = ec.getResource().expandNoL10n(.node["@no-current-selected-key"]!, "")/></#if>
     <#t><@csvValue (options.get(currentValue))!(currentValue)/>
 </#macro>
 
