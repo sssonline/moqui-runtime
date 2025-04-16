@@ -391,7 +391,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#macro check>
     <#assign options = {"":""}/><#assign options = sri.getFieldOptions(.node)>
     <#assign currentValue = sri.getFieldValue(.node?parent?parent, "")>
-    <#if !currentValue?has_content><#assign currentValue = .node["@no-current-selected-key"]!/></#if>
+    <#if !currentValue?has_content><#assign currentValue = ec.getResource().expandNoL10n(.node["@no-current-selected-key"]!, "")/></#if>
     <#t><#if currentValue?has_content>${options.get(currentValue)?default(currentValue)}</#if>
 </#macro>
 
@@ -442,7 +442,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#macro radio>
     <#assign options = {"":""}/><#assign options = sri.getFieldOptions(.node)>
     <#assign currentValue = sri.getFieldValueString(.node)/>
-    <#if !currentValue?has_content><#assign currentValue = .node["@no-current-selected-key"]!/></#if>
+    <#if !currentValue?has_content><#assign currentValue = ec.getResource().expandNoL10n(.node["@no-current-selected-key"]!, "")/></#if>
     <#t><#if currentValue?has_content>${options.get(currentValue)!(currentValue)}</#if>
 </#macro>
 
