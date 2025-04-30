@@ -353,8 +353,29 @@ Vue.component('container-dialog', {
     mounted: function() {
         var jqEl = $(this.$el); var vm = this;
         jqEl.on("hidden.bs.modal", function() { vm.isHidden = true; });
-        jqEl.on("shown.bs.modal", function() { vm.isHidden = false;
+        jqEl.on("shown.bs.modal", function() {
+            vm.isHidden = false;
+
+            // Initialize Select2 dropdowns
             jqEl.find(":not(.noResetSelect2)>select:not(.noResetSelect2)").select2({ });
+
+            // missing tooltips onto the visible select2 containers
+            jqEl.find('select[data-title]').each(function() {
+                var $select = $(this);
+                var titleText = $select.attr('data-title');
+                var id = $select.attr('id');
+                if (id && titleText) {
+                    // Find the select2 container
+                    var $select2Container = $('#select2-' + id + '-container').closest('.select2-container');
+                    if ($select2Container.length) {
+                        $select2Container.attr('title', titleText);
+                        $select2Container.attr('data-original-title', titleText);
+                        $select2Container.tooltip({ trigger: 'hover', container: 'body' });
+                    }
+                }
+            });
+
+            // Focus logic
             var defFocus = jqEl.find(".default-focus");
             if (defFocus.length) { defFocus.focus(); } else { jqEl.find("form :input:visible:not([type='submit']):first").focus(); }
         });
