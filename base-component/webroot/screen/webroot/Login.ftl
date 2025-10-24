@@ -100,10 +100,24 @@
                         placeholder="${ec.l10n.localize("Old Password")}" aria-label="${ec.l10n.localize("Old Password")}">
             </#if>
             <#-- FUTURE: fancy JS to validate PW as it is entered or on blur -->
-            <input type="password" name="newPassword" required="required" class="form-control middle"
-                    placeholder="${ec.l10n.localize("New Password")}" aria-label="${ec.l10n.localize("New Password")}">
-            <input type="password" name="newPasswordVerify" required="required" class="form-control bottom"
-                    placeholder="${ec.l10n.localize("New Password Verify")}" aria-label="${ec.l10n.localize("New Password Verify")}">
+            <input type="password"
+                   name="newPassword"
+                   required="required"
+                   class="form-control middle"
+                   placeholder="${ec.l10n.localize('New Password')}"
+                   aria-label="${ec.l10n.localize('New Password')}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="Do not use one of the last 5 Passwords. Must include at least one uppercase letter, one number, and one special character.">
+            <input type="password"
+                   name="newPasswordVerify"
+                   required="required"
+                   class="form-control bottom"
+                   placeholder="${ec.l10n.localize('New Password Verify')}"
+                   aria-label="${ec.l10n.localize('New Password Verify')}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="Do not use one of the last 5 Passwords. Must include at least one uppercase letter, one number, and one special character.">
             <button class="btn btn-lg btn-danger btn-block" type="submit">${ec.l10n.localize("Change Password")}</button>
 
             <p class="text-muted text-center">Password must be at least ${minLength} characters
