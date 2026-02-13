@@ -2226,3 +2226,156 @@ ${sri.getFieldValueString(.node)?html}</textarea>
         <#t>${sri.getFieldValueString(widgetNode)}
     </#if><#t>
 </#macro>
+
+<#-- ================ Math Line (custom element) ================ -->
+<#macro "math-line">
+    <#-- Basic attributes -->
+    <#assign mlId    = ec.getResource().expandNoL10n(.node["@id"]!"", "")>
+    <#assign mlClass = ec.getResource().expandNoL10n(.node["@style"]!"", "")>
+    <#assign mlTitle = ec.getResource().expand(.node["@title"]!"", "")>
+
+    <#-- tooltip: prefer local @tooltip, else inherit from parent -->
+    <#assign mlTooltip = ec.getResource().expand(.node["@tooltip"]!"", "")>
+    <#if !mlTooltip?has_content>
+        <#assign _mlParent = .node?parent>
+        <#if _mlParent?has_content>
+            <#assign mlTooltip = ec.getResource().expand(_mlParent["@tooltip"]!"", "")>
+        </#if>
+    </#if>
+
+    <#-- XSD attributes -->
+    <#assign mlSize        = (ec.getResource().expandNoL10n(.node["@size"]!"30", ""))!"30">
+    <#assign mlMaxlength   = ec.getResource().expandNoL10n(.node["@maxlength"]!"", "")>
+    <#assign mlDefault     = ec.getResource().expand(.node["@default-value"]!"", "")>
+    <#assign mlDisabled    = (ec.getResource().expandNoL10n(.node["@disabled"]!"false", ""))!"false">
+    <#assign mlReadOnly    = (ec.getResource().expandNoL10n(.node["@read-only"]!"false", ""))!"false">
+    <#assign mlDecimals    = (ec.getResource().expandNoL10n(.node["@decimals"]!"0", ""))!"0">
+    <#assign mlShowResult  = (ec.getResource().expandNoL10n(.node["@show-result"]!"false", ""))!"false">
+    <#assign mlPrefix      = ec.getResource().expand(.node["@prefix"]!"", "")>
+    <#assign mlRounding    = (ec.getResource().expandNoL10n(.node["@rounding-behavior"]!"round", ""))!"round">
+
+    <#-- Percent mode config attributes -->
+    <#assign mlDependsOnAttr   = ec.getResource().expandNoL10n(.node["@depends-on"]!"", "")>
+    <#assign mlTargetEntity    = ec.getResource().expandNoL10n(.node["@target-entity"]!"", "")>
+    <#assign mlTargetKeyField  = ec.getResource().expandNoL10n(.node["@target-key-field"]!"", "")>
+    <#assign mlTargetField     = ec.getResource().expandNoL10n(.node["@target-field"]!"", "")>
+    <#assign mlLookupTrans     = ec.getResource().expandNoL10n(.node["@lookup-transition"]!"", "")>
+    <#assign mlParamMapRaw     = ec.getResource().expandNoL10n(.node["@parameter-map"]!"", "")>
+
+    <#-- determine depends-on name (attribute preferred; else first depends-on child element) -->
+    <#assign mlDependsOn = mlDependsOnAttr>
+    <#if !mlDependsOn?has_content>
+        <#assign depNodes = .node["depends-on"]>
+        <#if depNodes?has_content && depNodes?size gt 0>
+            <#assign mlDependsOn = depNodes[0]["@field"]!depNodes[0]["@name"]!"" >
+        </#if>
+    </#if>
+
+    <#-- Field binding: same pattern as text-line -->
+    <#assign mlFieldName><@fieldName .node/></#assign>
+    <#if !mlFieldName?has_content>
+        <#if !mlId?has_content><#assign mlId><@fieldId .node/></#assign></#if>
+        <#assign mlFieldName = mlId>
+    </#if>
+    <#if !mlId?has_content>
+        <#assign mlId><@fieldId .node/></#assign>
+    </#if>
+
+    <#-- Percent enabled only if ALL required attributes present -->
+    <#assign mlPercentCapable =
+        (mlDependsOn?has_content && mlTargetEntity?has_content && mlTargetKeyField?has_content &&
+         mlTargetField?has_content && mlLookupTrans?has_content && mlParamMapRaw?has_content) >
+
+    <#-- depends-on field id (Moqui style) -->
+    <#assign mlDependsOnId = "">
+    <#if mlDependsOn?has_content>
+        <#assign mlDependsOnId><@fieldIdByName mlDependsOn/></#assign>
+    </#if>
+
+    <#-- transition URL -->
+    <#assign mlLookupUrl = "">
+    <#if mlLookupTrans?has_content>
+        <#assign _urlInfo = sri.makeUrlByType(mlLookupTrans, "transition", .node, "false")>
+        <#assign mlLookupUrl = _urlInfo.url>
+    </#if>
+
+    <#-- Build params JSON from parameter-map like [orderId:orderId,orderPartSeqId:orderPartSeqId] -->
+    <#assign mlParamsJson = "{}">
+    <#if mlParamMapRaw?has_content>
+        <#assign _pm = mlParamMapRaw?trim>
+        <#if _pm?starts_with("[")><#assign _pm = _pm?substring(1, _pm?length-1)></#if>
+        <#assign _pairs = _pm?split(",")>
+        <#assign _json = "{">
+        <#list _pairs as _p>
+            <#assign _kv = _p?split(":")>
+            <#if _kv?size gte 2>
+                <#assign _k = _kv[0]?trim>
+                <#assign _vName = _kv[1]?trim>
+                <#assign _vVal = (ec.context.get(_vName))!"" >
+                <#-- encode as JSON string literal (FreeMarker built-in) -->
+                <#assign _vJson = (_vVal?string)?json_string>
+                <#assign _json = _json + "\"" + _k + "\":\"" + _vJson + "\"">
+<#if _p_has_next><#assign _json = _json + ","></#if>
+</#if>
+</#list>
+<#assign _json = _json + "}">
+<#assign mlParamsJson = _json>
+</#if>
+
+<div class="math-line-wrap<#if mlClass?has_content> ${mlClass}</#if>" id="${mlId}">
+<div class="math-line-top">
+<#if mlTitle?has_content><strong v-pre>${mlTitle?html}</strong></#if>
+<#if mlPrefix?has_content><span v-pre>${mlPrefix?html}</span></#if>
+
+<input type="text"
+id="${mlId}_expr"
+name="${mlFieldName?html}_expr"
+class="math-line-expr"
+<#if mlSize?has_content> size="${mlSize?html}"</#if>
+<#if mlMaxlength?has_content> maxlength="${mlMaxlength?html}"</#if>
+<#if mlDefault?has_content> value="${mlDefault?html}"</#if>
+<#if (mlDisabled?lower_case == "true")> disabled="disabled"</#if>
+<#if (mlReadOnly?lower_case == "true")> readonly="readonly"</#if>
+<#if mlTooltip?has_content> data-toggle="tooltip" data-original-title="${mlTooltip?html}"</#if>
+data-ml-field="${mlFieldName?html}"
+data-ml-decimals="${mlDecimals?html}"
+data-ml-show-result="${mlShowResult?html}"
+data-ml-rounding="${mlRounding?html}"
+<#if mlPercentCapable>
+data-ml-percent-capable="true"
+data-ml-depends-on="${mlDependsOn?html}"
+data-ml-depends-on-id="${mlDependsOnId?html}"
+data-ml-target-entity="${mlTargetEntity?html}"
+data-ml-target-key-field="${mlTargetKeyField?html}"
+data-ml-target-field="${mlTargetField?html}"
+data-ml-lookup-url="${mlLookupUrl?html}"
+data-ml-params-json='${mlParamsJson?html}'
+               </#if>
+        />
+
+        <#-- percent toggle button -->
+        <#if mlPercentCapable>
+            <button type="button"
+                    class="math-line-percent-btn"
+                    aria-pressed="false"
+                    data-toggle="tooltip"
+                    data-original-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">
+                %
+            </button>
+        </#if>
+
+        <#-- what gets submitted: ALWAYS list-of-maps JSON -->
+        <input type="hidden"
+               class="math-line-value"
+               name="${mlFieldName?html}"
+               value="[]"/>
+    </div>
+
+    <div class="math-line-bottom">
+        <div class="math-line-error" style="display:none;"></div>
+    </div>
+
+    <#-- kept for backward compatibility; JS currently uses math-line-error for messages -->
+    <span class="math-line-result" style="display:none;"></span>
+</div>
+</#macro>
