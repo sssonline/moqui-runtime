@@ -1427,6 +1427,23 @@ moqui.webrootVue = new Vue({
             $("#screen-document-dialog-body").load(this.currentPath + '/screenDoc?docIndex=' + docIndex);
         },
         stopProp: function (e) { e.stopPropagation(); },
+        sanitizeNotifyHtml: function(raw) {
+            if (raw == null) return '';
+            raw = String(raw);
+
+            var esc = raw
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+
+            // allow a small whitelist of tags (no attributes)
+            esc = esc.replace(/&lt;(\/?(?:b|strong|i|em|br|p|ul|ol|li|small|code|pre))&gt;/gi, '<$1>');
+            esc = esc.replace(/<([a-z0-9]+)\s+[^>]*>/gi, '<$1>');
+
+            return esc;
+        },
         getNavHref: function(navIndex) {
             if (!navIndex) navIndex = this.navMenuList.length - 1;
             var navMenu = this.navMenuList[navIndex];

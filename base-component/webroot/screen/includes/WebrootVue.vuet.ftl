@@ -91,8 +91,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <i class="fa fa-exclamation-circle"></i></a>
                 <ul class="dropdown-menu" @click.prevent="stopProp">
                     <li v-for="histItem in notifyHistoryList">
-                        <#-- NOTE: don't use v-html for histItem.message, may contain input repeated back so need to encode for security (make sure scripts not run, etc) -->
-                        <div :class="'alert alert-' + histItem.type" @click.prevent="stopProp" role="alert"><strong>{{histItem.time}}</strong> <span>{{histItem.message}}</span></div>
+                        <div :class="'alert alert-' + histItem.type" @click.prevent="stopProp" role="alert">
+                            <strong>{{histItem.time}}</strong>
+                            <span v-html="sanitizeNotifyHtml(histItem.message)"></span>
+                        </div>
                     </li>
                 </ul>
             </div>
