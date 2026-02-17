@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#-- NOTE: no empty lines before the first #macro otherwise FTL outputs empty lines -->
 <#include "DefaultScreenMacros.any.ftl"/>
 <#macro attributeValue textValue>${Static["org.moqui.util.StringUtilities"].encodeForXmlAttribute(textValue)}</#macro>
-<#macro @element><#-- Doing nothing for element ${.node?node_name}, not yet implemented. --></#macro>
+<#macro @element><#-- Doing nothing for element ${.node?node_name}, in mode: XML not yet implemented. --></#macro>
 <#macro screen><#recurse></#macro>
 <#macro widgets>
 <#if .node?parent?node_name == "screen"><${sri.getActiveScreenDef().getScreenName()}></#if>

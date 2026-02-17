@@ -14,7 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#include "DefaultScreenMacros.any.ftl"/>
 <#macro attributeValue textValue>${Static["org.moqui.util.StringUtilities"].encodeForXmlAttribute(textValue, true)}</#macro>
 
-<#macro @element><fo:block>=== Doing nothing for element ${.node?node_name}, not yet implemented. ===</fo:block></#macro>
+<#macro @element><fo:block>=== Doing nothing for element ${.node?node_name}, in mode: XSL not yet implemented. ===</fo:block></#macro>
 
 <#macro screen><#recurse></#macro>
 <#macro widgets>

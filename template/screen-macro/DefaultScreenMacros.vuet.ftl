@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <#-- NOTE: no empty lines before the first #macro otherwise FTL outputs empty lines -->
 <#include "DefaultScreenMacros.any.ftl"/>
-<#macro @element><p>=== Doing nothing for element ${.node?node_name}, not yet implemented. ===</p></#macro>
+<#macro @element><p>=== Doing nothing for element ${.node?node_name}, in mode: VUET not yet implemented. ===</p></#macro>
 
 <#macro screen><#if !screenTitle?has_content><#assign screenTitle = sri.screenUrlInfo.targetScreen.getDefaultMenuName()></#if><#recurse></#macro>
 <#macro widgets><#t>
