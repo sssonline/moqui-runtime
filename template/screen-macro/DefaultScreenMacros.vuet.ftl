@@ -2312,9 +2312,8 @@ ${sri.getFieldValueString(.node)?html}</textarea>
                 <#assign _k = _kv[0]?trim>
                 <#assign _vName = _kv[1]?trim>
                 <#assign _vVal = (ec.context.get(_vName))!"" >
-                <#-- encode as JSON string literal (FreeMarker built-in) -->
-                <#assign _vJson = (_vVal?string)?json_string>
-                <#assign _json = _json + "\"" + _k + "\":\"" + _vJson + "\"">
+                <#-- IMPORTANT: json_string returns an escaped JSON string *without* outer quotes -->
+                <#assign _json = _json + "\"" + (_k?json_string) + "\":\"" + ((_vVal?string)?json_string) + "\"" >
 <#if _p_has_next><#assign _json = _json + ","></#if>
 </#if>
 </#list>
@@ -2349,26 +2348,27 @@ data-ml-target-entity="${mlTargetEntity?html}"
 data-ml-target-key-field="${mlTargetKeyField?html}"
 data-ml-target-field="${mlTargetField?html}"
 data-ml-lookup-url="${mlLookupUrl?html}"
-data-ml-params-json='${mlParamsJson?html}'
-               </#if>
-        />
+<#-- IMPORTANT: use double-quotes attribute, and HTML-escape the JSON so quotes are safe -->
+data-ml-params-json="${mlParamsJson?html}"
+</#if>
+/>
 
-        <#-- percent toggle button -->
-        <#if mlPercentCapable>
-            <button type="button"
-                    class="math-line-percent-btn"
-                    aria-pressed="false"
-                    data-toggle="tooltip"
-                    data-original-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">
-                %
-            </button>
-        </#if>
+<#-- percent toggle button -->
+<#if mlPercentCapable>
+<button type="button"
+class="math-line-percent-btn"
+aria-pressed="false"
+data-toggle="tooltip"
+data-original-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">
+%
+</button>
+</#if>
 
-        <#-- what gets submitted: ALWAYS list-of-maps JSON -->
-        <input type="hidden"
-               class="math-line-value"
-               name="${mlFieldName?html}"
-               value="[]"/>
+<#-- what gets submitted: ALWAYS map JSON -->
+<input type="hidden"
+class="math-line-value"
+name="${mlFieldName?html}"
+value='{"percentMode":false,"result":null,"percentResults":[]}'/>
     </div>
 
     <div class="math-line-bottom">
