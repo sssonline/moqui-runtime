@@ -2312,13 +2312,44 @@ ${sri.getFieldValueString(.node)?html}</textarea>
                 <#assign _k = _kv[0]?trim>
                 <#assign _vName = _kv[1]?trim>
                 <#assign _vVal = (ec.context.get(_vName))!"" >
-                <#-- IMPORTANT: json_string returns an escaped JSON string *without* outer quotes -->
                 <#assign _json = _json + "\"" + (_k?json_string) + "\":\"" + ((_vVal?string)?json_string) + "\"" >
 <#if _p_has_next><#assign _json = _json + ","></#if>
 </#if>
 </#list>
 <#assign _json = _json + "}">
 <#assign mlParamsJson = _json>
+</#if>
+
+<#-- NEW: initialize from current bound field value when editing existing records -->
+<#assign mlCtxVal = ec.context.get(mlFieldName)!"" >
+<#assign mlInitExpr = "">
+<#assign mlInitHidden = '{"percentMode":false,"result":null,"percentResults":[]}'>
+
+<#-- If mlCtxVal is a simple number (BigDecimal/Number), prefill expr + hidden JSON -->
+<#if mlCtxVal?has_content>
+<#if mlCtxVal?is_number>
+<#assign mlInitExpr = mlCtxVal?string>
+<#assign mlInitHidden = '{"percentMode":false,"result":' + (mlCtxVal?string) + ',"percentResults":[]}'>
+
+<#-- If it's a string, support numeric strings and JSON strings -->
+<#elseif mlCtxVal?is_string>
+<#assign _sv = mlCtxVal?trim>
+<#-- JSON string already -->
+<#if _sv?starts_with("{")>
+<#assign mlInitHidden = _sv>
+<#-- leave expr empty; JS will hydrate from hidden if it has result -->
+<#-- numeric string -->
+<#elseif _sv?matches("^-?\\d+(\\.\\d+)?$")>
+<#assign mlInitExpr = _sv>
+<#assign mlInitHidden = '{"percentMode":false,"result":' + _sv + ',"percentResults":[]}'>
+
+</#if>
+</#if>
+</#if>
+
+<#-- fallback to @default-value if nothing else provided -->
+<#if !mlInitExpr?has_content && mlDefault?has_content>
+<#assign mlInitExpr = mlDefault>
 </#if>
 
 <div class="math-line-wrap<#if mlClass?has_content> ${mlClass}</#if>" id="${mlId}">
@@ -2332,7 +2363,7 @@ name="${mlFieldName?html}_expr"
 class="math-line-expr"
 <#if mlSize?has_content> size="${mlSize?html}"</#if>
 <#if mlMaxlength?has_content> maxlength="${mlMaxlength?html}"</#if>
-<#if mlDefault?has_content> value="${mlDefault?html}"</#if>
+<#if mlInitExpr?has_content> value="${mlInitExpr?html}"</#if>
 <#if (mlDisabled?lower_case == "true")> disabled="disabled"</#if>
 <#if (mlReadOnly?lower_case == "true")> readonly="readonly"</#if>
 <#if mlTooltip?has_content> data-toggle="tooltip" data-original-title="${mlTooltip?html}"</#if>
@@ -2348,7 +2379,6 @@ data-ml-target-entity="${mlTargetEntity?html}"
 data-ml-target-key-field="${mlTargetKeyField?html}"
 data-ml-target-field="${mlTargetField?html}"
 data-ml-lookup-url="${mlLookupUrl?html}"
-<#-- IMPORTANT: use double-quotes attribute, and HTML-escape the JSON so quotes are safe -->
 data-ml-params-json="${mlParamsJson?html}"
 </#if>
 />
@@ -2368,7 +2398,7 @@ data-original-title="Toggle percent mode: compute this expression as a percent o
 <input type="hidden"
 class="math-line-value"
 name="${mlFieldName?html}"
-value='{"percentMode":false,"result":null,"percentResults":[]}'/>
+value='${mlInitHidden?html}'/>
     </div>
 
     <div class="math-line-bottom">
