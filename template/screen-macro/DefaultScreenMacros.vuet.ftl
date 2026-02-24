@@ -2409,3 +2409,174 @@ value='${mlInitHidden?html}'/>
     <span class="math-line-result" style="display:none;"></span>
 </div>
 </#macro>
+
+
+    <#-- helper: make a safe-ish id suffix (don't rely on it for state) -->
+    <#function tabIdSuffix name>
+        <#local s = name!"" >
+        <#local s = s?replace(" ", "_")>
+        <#local s = s?replace("/", "_")>
+        <#local s = s?replace(".", "_")>
+        <#local s = s?replace(":", "_")>
+        <#local s = s?replace("#", "_")>
+        <#local s = s?replace("?", "_")>
+        <#local s = s?replace("&", "_")>
+        <#local s = s?replace("=", "_")>
+        <#return s>
+    </#function>
+<#-- ================ Tabs (custom element) ================ -->
+<#macro tabs>
+    <#-- attributes -->
+    <#assign tabsName = ec.getResource().expandNoL10n(.node["@name"]!"", "")>
+    <#assign parmName = ec.getResource().expandNoL10n(.node["@parm-name"]!"", "")>
+    <#assign defaultItem = ec.getResource().expandNoL10n(.node["@default-item"]!"", "")>
+
+    <#-- id base (NO whitespace/newlines) -->
+    <#assign tabsIdBase = "">
+    <#if .node["@id"]?has_content>
+        <#assign tabsIdBase = ec.getResource().expandNoL10n(.node["@id"], "")>
+    <#elseif tabsName?has_content>
+        <#assign tabsIdBase = tabsName>
+    <#else>
+        <#assign tabsIdBase = "tabs">
+    </#if>
+    <#if sectionEntryIndex?has_content>
+        <#assign tabsIdBase = tabsIdBase + "_" + sectionEntryIndex>
+    </#if>
+
+    <#-- collect tab nodes -->
+    <#assign tabNodeList = .node["tab"]![]>
+
+    <#-- determine active tab name -->
+    <#assign activeTab = "">
+    <#if parmName?has_content>
+        <#assign activeTab = (ec.web.parameters.get(parmName))!"" >
+        <#if !activeTab?has_content>
+            <#assign activeTab = (context.get(parmName))!"" >
+        </#if>
+    </#if>
+    <#if !activeTab?has_content && defaultItem?has_content>
+        <#assign activeTab = defaultItem>
+    </#if>
+    <#if !activeTab?has_content && tabNodeList?has_content>
+        <#assign activeTab = ec.getResource().expandNoL10n(tabNodeList[0]["@name"]!"", "")>
+    </#if>
+
+    <#-- validate activeTab exists; else fallback to first -->
+    <#assign activeFound = false>
+    <#list tabNodeList as tnode>
+        <#assign tname_check = ec.getResource().expandNoL10n(tnode["@name"]!"", "")>
+        <#if tname_check?has_content && activeTab?has_content && tname_check == activeTab>
+            <#assign activeFound = true>
+            <#break>
+        </#if>
+    </#list>
+    <#if !activeFound && tabNodeList?has_content>
+        <#assign activeTab = ec.getResource().expandNoL10n(tabNodeList[0]["@name"]!"", "")>
+    </#if>
+
+    <div id="${tabsIdBase}-tabpanel" data-tabs-parm-name="${parmName?html}">
+        <ul role="tablist" class="nav nav-tabs">
+            <#list tabNodeList as tnode>
+                <#assign tname = ec.getResource().expandNoL10n(tnode["@name"]!"", "")>
+                <#assign ttitle = ec.getResource().expand(tnode["@title"]!"", "")>
+                <#assign isActive = (tname?has_content && activeTab?has_content && tname == activeTab)>
+                <#assign tid = tabIdSuffix(tname)>
+
+                <li class="<#if isActive>active</#if>">
+                    <a href="#${tabsIdBase}_${tid}"
+                       data-toggle="tab"
+                       data-tab-name="${tname?html}"
+                       role="tab"
+                       aria-expanded="<#if isActive>true<#else>false</#if>">
+                        <span v-pre>${ttitle?has_content?then(ttitle?html, tname?html)}</span>
+                    </a>
+                </li>
+            </#list>
+        </ul>
+
+        <div class="tab-content">
+            <#list tabNodeList as tnode>
+                <#assign tname = ec.getResource().expandNoL10n(tnode["@name"]!"", "")>
+                <#assign isActive = (tname?has_content && activeTab?has_content && tname == activeTab)>
+                <#assign tid = tabIdSuffix(tname)>
+                <div id="${tabsIdBase}_${tid}"
+                     class="tab-pane<#if isActive> active</#if>">
+                    <#recurse tnode>
+                </div>
+            </#list>
+        </div>
+
+        <#-- Persist selection + FORCE correct active tab on load -->
+        <#if parmName?has_content>
+            <m-script>
+                (function() {
+                var $root = $("#${tabsIdBase}-tabpanel");
+                if (!$root.length) return;
+
+                // avoid double-binding
+                $root.off("shown.bs.tab.tabs-${tabsIdBase}");
+                $root.off("moqui.tabs.init.tabs-${tabsIdBase}");
+
+                // helper: show tab by name (tabName == original @name, NOT the href suffix)
+                function showByName(tabName) {
+                if (!tabName) return;
+                var $a = $root.find('ul.nav.nav-tabs a[data-toggle="tab"][data-tab-name="' + tabName.replace(/"/g, '\\"') + '"]').first();
+                if (!$a.length) return;
+
+                if (typeof $a.tab === "function") $a.tab("show");
+                else $a.click();
+                }
+
+                // 1) On tab shown: update URL parm so submits/links keep it
+                $root.on("shown.bs.tab.tabs-${tabsIdBase}", 'a[data-toggle="tab"]', function (e) {
+                var tabName = $(e.target).attr("data-tab-name") || "";
+                if (!tabName) return;
+
+                var parmName = $root.attr("data-tabs-parm-name") || "";
+                if (!parmName) return;
+
+                try {
+                var u = new URL(window.location.href);
+                u.searchParams.set(parmName, tabName);
+                window.history.replaceState(window.history.state || {}, document.title, u.toString());
+                  } catch (err) { }
+                });
+
+                // 2) FORCE correct tab on load (fixes “reverts to first tab” after submit)
+                $root.on("moqui.tabs.init.tabs-${tabsIdBase}", function() {
+                var parmName = $root.attr("data-tabs-parm-name") || "";
+                if (!parmName) return;
+
+                var desired = "";
+                try {
+                var u = new URL(window.location.href);
+                desired = u.searchParams.get(parmName) || "";
+                } catch (err) { }
+
+                  // fallback to server-rendered active (already marked by macro)
+                  if (!desired) {
+                desired = $root.find('ul.nav.nav-tabs li.active a[data-toggle="tab"]').attr("data-tab-name") || "";
+                }
+
+                  if (desired) showByName(desired);
+                });
+
+                // run once now (after markup exists)
+                $root.trigger("moqui.tabs.init.tabs-${tabsIdBase}");
+
+                // also run after modals show (tabs inside dialogs)
+                $(document).on("shown.bs.modal.tabs-${tabsIdBase}", function(evt) {
+                if ($root.closest(evt.target).length) $root.trigger("moqui.tabs.init.tabs-${tabsIdBase}");
+                });
+
+                })();
+            </m-script>
+        </#if>
+    </div>
+</#macro>
+
+<#macro tab>
+    <#-- tab is only rendered inside tabs; recurse its children -->
+    <#recurse>
+</#macro>
