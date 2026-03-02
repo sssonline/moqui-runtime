@@ -2320,34 +2320,26 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 <#assign mlParamsJson = _json>
 </#if>
 
-<#-- NEW: initialize from current bound field value when editing existing records -->
+<#-- initialize from current bound field value when editing existing records -->
 <#assign mlCtxVal = ec.context.get(mlFieldName)!"" >
 <#assign mlInitExpr = "">
 <#assign mlInitHidden = '{"percentMode":false,"result":null,"percentResults":[]}'>
 
-<#-- If mlCtxVal is a simple number (BigDecimal/Number), prefill expr + hidden JSON -->
 <#if mlCtxVal?has_content>
 <#if mlCtxVal?is_number>
 <#assign mlInitExpr = mlCtxVal?string>
-<#assign mlInitHidden = '{"percentMode":false,"result":' + (mlCtxVal?string) + ',"percentResults":[]}'>
-
-<#-- If it's a string, support numeric strings and JSON strings -->
+<#assign mlInitHidden = '{"percentMode":false,"result":' + (mlCtxVal?string) + ',"percentResults":[]}' >
 <#elseif mlCtxVal?is_string>
 <#assign _sv = mlCtxVal?trim>
-<#-- JSON string already -->
 <#if _sv?starts_with("{")>
 <#assign mlInitHidden = _sv>
-<#-- leave expr empty; JS will hydrate from hidden if it has result -->
-<#-- numeric string -->
 <#elseif _sv?matches("^-?\\d+(\\.\\d+)?$")>
 <#assign mlInitExpr = _sv>
-<#assign mlInitHidden = '{"percentMode":false,"result":' + _sv + ',"percentResults":[]}'>
-
+<#assign mlInitHidden = '{"percentMode":false,"result":' + _sv + ',"percentResults":[]}' >
 </#if>
 </#if>
 </#if>
 
-<#-- fallback to @default-value if nothing else provided -->
 <#if !mlInitExpr?has_content && mlDefault?has_content>
 <#assign mlInitExpr = mlDefault>
 </#if>
@@ -2360,17 +2352,23 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 <input type="text"
 id="${mlId}_expr"
 name="${mlFieldName?html}_expr"
-class="math-line-expr"
-<#if mlSize?has_content> size="${mlSize?html}"</#if>
+class="form-control math-line-expr"
+autocapitalize="off" autocomplete="off"
+<#if mlSize?has_content> size="${mlSize?html}"<#else> style="width:100%;"</#if>
 <#if mlMaxlength?has_content> maxlength="${mlMaxlength?html}"</#if>
 <#if mlInitExpr?has_content> value="${mlInitExpr?html}"</#if>
 <#if (mlDisabled?lower_case == "true")> disabled="disabled"</#if>
 <#if (mlReadOnly?lower_case == "true")> readonly="readonly"</#if>
-<#if mlTooltip?has_content> data-toggle="tooltip" data-original-title="${mlTooltip?html}"</#if>
+<#if mlTooltip?has_content> data-toggle="tooltip" title="${mlTooltip?html}"</#if>
+
 data-ml-field="${mlFieldName?html}"
 data-ml-decimals="${mlDecimals?html}"
 data-ml-show-result="${mlShowResult?html}"
 data-ml-rounding="${mlRounding?html}"
+
+data-ml-saved-expr=""        <#-- NEW: client-only saved formula -->
+data-ml-display-mode="edit"  <#-- NEW: edit|result|msg|error -->
+
 <#if mlPercentCapable>
 data-ml-percent-capable="true"
 data-ml-depends-on="${mlDependsOn?html}"
@@ -2386,11 +2384,10 @@ data-ml-params-json="${mlParamsJson?html}"
 <#-- percent toggle button -->
 <#if mlPercentCapable>
 <button type="button"
-class="math-line-percent-btn"
+class="btn btn-outline-secondary math-line-percent-btn"
 aria-pressed="false"
 data-toggle="tooltip"
-data-original-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">
-%
+title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">%
 </button>
 </#if>
 
@@ -2399,14 +2396,7 @@ data-original-title="Toggle percent mode: compute this expression as a percent o
 class="math-line-value"
 name="${mlFieldName?html}"
 value='${mlInitHidden?html}'/>
-    </div>
-
-    <div class="math-line-bottom">
-        <div class="math-line-error" style="display:none;"></div>
-    </div>
-
-    <#-- kept for backward compatibility; JS currently uses math-line-error for messages -->
-    <span class="math-line-result" style="display:none;"></span>
+  </div>
 </div>
 </#macro>
 
