@@ -653,10 +653,13 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
             <#if isSavedFinds>
                 <#assign activeFormListFind = formListInfo.getFormInstance().getActiveFormListFind(ec)!>
                 <#assign formSaveFindUrl = sri.buildUrl("formSaveFind").path>
+                <#assign userDefaultFormListFindId = formListInfo.getUserDefaultFormListFindId(ec)!"">
                 <#assign descLabel = ec.getL10n().localize("Description")>
                 <#if activeFormListFind?has_content>
                     <#assign screenScheduled = formListInfo.getScreenForm().getFormListFindScreenScheduled(activeFormListFind.formListFindId, ec)!>
-                    <div><strong>${ec.getL10n().localize("Active Saved Find:")} ${activeFormListFind.description?html}</strong></div>
+                    <div><strong>${ec.getL10n().localize("Active Saved Find:")} ${activeFormListFind.description?html}</strong>
+                        <#if userDefaultFormListFindId == activeFormListFind.formListFindId><span class="text-info">(${ec.getL10n().localize("My Default")})</span></#if>
+                    </div>
                     <#if screenScheduled?has_content>
                         <p>(Scheduled for <#if screenScheduled.renderMode! == 'xsl-fo'>PDF<#else>${screenScheduled.renderMode!?upper_case}</#if><#rt>
                             <#t> ${Static["org.moqui.impl.service.ScheduledJobRunner"].getCronDescription(screenScheduled.cronExpression, ec.user.getLocale(), true)!})</p>
@@ -664,6 +667,7 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <m-form class="form-inline" id="${formId}_SCHED" action="${formSaveFindUrl}">
                             <input type="hidden" name="formListFindId" value="${activeFormListFind.formListFindId}">
                             <input type="hidden" name="screenPath" value="${sri.getScreenUrlInstance().path}">
+                            <input type="hidden" name="formLocation" value="${formListInfo.getSavedFindFullLocation()}">
                             <div class="form-group">
                                 <label class="sr-only" for="${formId}_SCHED_renderMode">${ec.getL10n().localize("Mode")}</label>
                                 <drop-down name="renderMode" id="${formId}_SCHED_renderMode" :options="[{id:'xlsx',text:'XLSX'},{id:'csv',text:'CSV'},{id:'xsl-fo',text:'PDF'}]"></drop-down>
@@ -713,6 +717,11 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                                 <input type="text" size="40" name="_findDescription" id="${saveFindFormId}_description" value="${formListFind.description?html}" class="form-control required" required="required">
                             </div>
                             <button type="submit" name="UpdateFind" class="btn btn-primary btn-sm">${ec.getL10n().localize("Update to Current")}</button>
+                            <#if userDefaultFormListFindId == formListFind.formListFindId>
+                                <button type="submit" name="ClearDefault" class="btn btn-info btn-sm">${ec.getL10n().localize("Clear Default")}</button>
+                            <#else>
+                                <button type="submit" name="MakeDefault" class="btn btn-default btn-sm">${ec.getL10n().localize("Make Default")}</button>
+                            </#if>
                             <#if userFindInfo.isByUserId == "true"><button type="submit" name="DeleteFind" class="btn btn-danger btn-sm" onclick="return confirm('${ec.getL10n().localize("Delete")} ${formListFind.description?js_string}?');">&times;</button></#if>
                         </m-form>
                         <m-link href="${doFindUrl.pathWithParams}" class="btn btn-success btn-sm">${ec.getL10n().localize("Do Find")}</m-link>
@@ -720,6 +729,12 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                         <m-link href="${doFindUrl.pathWithParams}" class="btn btn-success btn-sm">${ec.getL10n().localize("Do Find")}</m-link>
                         <#if userFindInfo.isByUserId == "true">
                         <m-form class="form-inline" id="${saveFindFormId}" action="${formSaveFindUrl}" :no-validate="true">
+                            <input type="hidden" name="formLocation" value="${formListInfo.getSavedFindFullLocation()}">
+                            <#if userDefaultFormListFindId == formListFind.formListFindId>
+                                <button type="submit" name="ClearDefault" class="btn btn-info btn-sm">${ec.getL10n().localize("Clear Default")}</button>
+                            <#else>
+                                <button type="submit" name="MakeDefault" class="btn btn-default btn-sm">${ec.getL10n().localize("Make Default")}</button>
+                            </#if>
                             <input type="hidden" name="formListFindId" value="${formListFind.formListFindId}">
                             <button type="submit" name="DeleteFind" class="btn btn-danger btn-sm" onclick="return confirm('${ec.getL10n().localize("Delete")} ${formListFind.description?js_string}?');">&times;</button>
                         </m-form>
@@ -740,8 +755,18 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
                     <#if context[listName + "PageSize"]??><input type="hidden" name="pageSize" value="${context[listName + "PageSize"]?c}"></#if>
                     <#list hiddenParameterKeys as hiddenParameterKey><input type="hidden" name="${hiddenParameterKey}" value="${hiddenParameterMap.get(hiddenParameterKey)!""}"></#list>
                     <fieldset class="form-horizontal">
-                        <div class="form-group"><div class="col-sm-2">&nbsp;</div><div class="col-sm-10">
-                            <button type="button" name="clearParameters" class="btn btn-primary btn-sm" @click.prevent="props.clearForm">${ec.getL10n().localize("Clear Parameters")}</button></div></div>
+                        <div class="form-group"><div class="col-sm-2">&nbsp;</div>
+                            <div class="col-sm-10">
+                                <#if formListFindId?has_content>
+                                    <input type="hidden" name="formListFindId" value="${formListFindId}">
+                                </#if>
+
+                                <button type="button" name="clearParameters" class="btn btn-primary btn-sm"
+                                        @click.prevent="props.clearForm(); <#if formListFindId?has_content>setTimeout(function(){ $('#${headerFormId} input[name=formListFindId]').val('${formListFindId?js_string}'); }, 0);</#if>">
+                                ${ec.getL10n().localize("Clear Parameters")}
+                                </button>
+                            </div>
+                        </div>
 
                         <#-- Always add an orderByField to select one or more columns to order by -->
                         <div class="form-group">
