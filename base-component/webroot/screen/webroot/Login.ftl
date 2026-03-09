@@ -18,112 +18,84 @@
 </script>
 
 <div class="text-center form-signin">
-    <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation"><a href="#login" aria-controls="login" role="tab" data-toggle="tab">${ec.l10n.localize("Login")}</a></li>
-        <#if authFlowList?has_content && !authFlowList.isEmpty()><li role="presentation"><a href="#sso" aria-controls="sso" role="tab" data-toggle="tab">${ec.l10n.localize("SSO")}</a></li></#if>
-        <li role="presentation"><a href="#reset" aria-controls="reset" role="tab" data-toggle="tab">${ec.l10n.localize("Reset Password")}</a></li>
-        <li role="presentation"><a href="#change" aria-controls="change" role="tab" data-toggle="tab">${ec.l10n.localize("Change Password")}</a></li>
-    </ul>
-</div>
-<#-- old 'tabs' more like links:
-<div class="text-center">
-    <ul class="list-inline">
-        <li><a class="text-primary" href="#login" data-toggle="tab">${ec.l10n.localize("Login")}</a></li>
-        <li><a class="text-primary" href="#reset" data-toggle="tab">${ec.l10n.localize("Reset Password")}</a></li>
-        <li><a class="text-primary" href="#change" data-toggle="tab">${ec.l10n.localize("Change Password")}</a></li>
-    </ul>
-</div>
--->
-<div class="tab-content">
-    <div id="login" class="tab-pane active">
-        <form method="post" action="${sri.buildUrl("login").url}" class="form-signin" id="login_form">
-            <input type="hidden" name="initialTab" value="login">
-            <#-- people know what to do <p class="text-muted text-center">${ec.l10n.localize("Enter your username and password to sign in")}</p> -->
-            <#-- not needed for this request: <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}"> -->
-            <input id="login_form_username" name="username" type="text" value="${(username!"")?html}"
-                    <#if username?has_content && secondFactorRequired>disabled="disabled"</#if>
-                    required="required" class="form-control top"
-                    placeholder="${ec.l10n.localize("Username")}" aria-label="${ec.l10n.localize("Username")}">
-            <#-- secondFactorRequired will only be set if a user is pre-authenticated, and in that case password not required again -->
-            <#if secondFactorRequired>
-                <input id="login_form_code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
-                       required="required" class="form-control bottom"
-                       placeholder="${ec.l10n.localize("Authentication Code")}" aria-label="${ec.l10n.localize("Authentication Code")}">
-            <#else>
-                <input type="password" name="password" required="required" class="form-control <#if secondFactorRequired>middle<#else>bottom</#if>"
-                       placeholder="${ec.l10n.localize("Password")}" aria-label="${ec.l10n.localize("Password")}">
-            </#if>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">${ec.l10n.localize("Sign in")}</button>
-            <#if expiredCredentials><p class="text-warning text-center">WARNING: Your password has expired</p></#if>
-            <#if passwordChangeRequired><p class="text-warning text-center">WARNING: Password change required</p></#if>
-        </form>
-    </div>
-    <#if authFlowList?has_content && !authFlowList.isEmpty()>
-        <div id="sso" class="tab-pane">
-            <#list authFlowList as authFlow>
-                <form method="post" action="/sso/login" class="form-signin">
-                    <input type="hidden" name="authFlowId" value="${authFlow.authFlowId}">
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">${authFlow.description}</button>
-                </form>
-            </#list>
-        </div>
-    </#if>
-    <div id="reset" class="tab-pane">
-        <form method="post" action="${sri.buildUrl("resetPassword").url}" class="form-signin" id="reset_form">
-            <p class="text-muted text-center">${ec.l10n.localize("Enter your username to email a reset password")}</p>
-            <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
-            <input type="hidden" name="initialTab" value="reset">
-            <input id="reset_form_username" name="username" type="text" value="${(username!"")?html}"
-                    <#if username?has_content && secondFactorRequired>disabled="disabled"</#if>
-                    required="required" class="form-control"
-                    placeholder="${ec.l10n.localize("Username")}" aria-label="${ec.l10n.localize("Username")}">
-            <button class="btn btn-lg btn-danger btn-block" type="submit">${ec.l10n.localize("Email Reset Password")}</button>
-        </form>
-    </div>
-    <div id="change" class="tab-pane">
-        <form method="post" action="${sri.buildUrl("changePassword").url}" class="form-signin" id="change_form">
-            <p class="text-muted text-center">${ec.l10n.localize("Enter details to change your password")}</p>
-            <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
-            <input type="hidden" name="initialTab" value="change">
-            <input id="change_form_username" name="username" type="text" value="${(username!"")?html}"
-                    <#if username?has_content && secondFactorRequired>disabled="disabled"</#if>
-                    required="required" class="form-control top"
-                    placeholder="${ec.l10n.localize("Username")}" aria-label="${ec.l10n.localize("Username")}">
-            <#-- secondFactorRequired will only be set if a user is pre-authenticated, and in that case password not required again -->
-            <#if secondFactorRequired>
-                <input type="hidden" name="oldPassword" value="ignored">
-                <input id="change_form_code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
-                        required="required" class="form-control middle"
-                        placeholder="${ec.l10n.localize("Authentication Code")}" aria-label="${ec.l10n.localize("Authentication Code")}">
-            <#else>
-                <input type="password" name="oldPassword" required="required" class="form-control middle"
-                        placeholder="${ec.l10n.localize("Old Password")}" aria-label="${ec.l10n.localize("Old Password")}">
-            </#if>
-            <#-- FUTURE: fancy JS to validate PW as it is entered or on blur -->
-            <input type="password"
-                   name="newPassword"
-                   required="required"
-                   class="form-control middle"
-                   placeholder="${ec.l10n.localize('New Password')}"
-                   aria-label="${ec.l10n.localize('New Password')}"
-                   data-toggle="tooltip"
-                   data-placement="right"
-                   title="Do not use one of the last 5 Passwords. Must include at least one uppercase letter, one number, and one special character.">
-            <input type="password"
-                   name="newPasswordVerify"
-                   required="required"
-                   class="form-control bottom"
-                   placeholder="${ec.l10n.localize('New Password Verify')}"
-                   aria-label="${ec.l10n.localize('New Password Verify')}"
-                   data-toggle="tooltip"
-                   data-placement="right"
-                   title="Do not use one of the last 5 Passwords. Must include at least one uppercase letter, one number, and one special character.">
-            <button class="btn btn-lg btn-danger btn-block" type="submit">${ec.l10n.localize("Change Password")}</button>
+    <#-- Login only; Reset Password is now a modal dialog -->
+    <div class="tab-content" style="margin-top: 0;">
+        <div id="login" class="tab-pane active">
+            <form method="post" action="${sri.buildUrl("login").url}" class="form-signin" id="login_form">
+                <input type="hidden" name="initialTab" value="login">
 
-            <p class="text-muted text-center">Password must be at least ${minLength} characters
-                with at least <strong>${minDigits} number<#if (minDigits > 1)>s</#if></strong>
-                <#if (minOthers > 0)> and at least <strong>${minOthers} punctuation character<#if (minOthers > 1)>s</#if></strong></#if></p>
-        </form>
+                <input id="login_form_username" name="username" type="text" value="${(username!"")?html}"
+                        <#if username?has_content && secondFactorRequired>disabled="disabled"</#if>
+                        required="required" class="form-control top"
+                        placeholder="${ec.l10n.localize("Username")}" aria-label="${ec.l10n.localize("Username")}">
+
+                <#-- secondFactorRequired will only be set if a user is pre-authenticated, and in that case password not required again -->
+                <#if secondFactorRequired>
+                    <input id="login_form_code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+                           required="required" class="form-control bottom"
+                           placeholder="${ec.l10n.localize("Authentication Code")}" aria-label="${ec.l10n.localize("Authentication Code")}">
+                <#else>
+                    <div class="password-wrap">
+                        <input type="password" name="password" required="required"
+                               class="pw-field form-control bottom"
+                               placeholder="${ec.l10n.localize("Password")}" aria-label="${ec.l10n.localize("Password")}">
+                        <button type="button" class="pw-reveal" aria-label="${ec.l10n.localize("Show password")}" title="${ec.l10n.localize("Show password")}">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </#if>
+
+                <button class="btn btn-lg btn-primary btn-block" type="submit">${ec.l10n.localize("Sign in")}</button>
+
+                <#-- Links below login -->
+                <div class="text-center" style="margin-top:10px;">
+                    <button type="button" class="btn btn-link" data-toggle="modal" data-target="#resetPwModal" style="padding:0;">
+                        ${ec.l10n.localize("Reset Password")}
+                    </button>
+                </div>
+
+                <#if expiredCredentials><p class="text-warning text-center" style="margin-top:10px;">WARNING: Your password has expired</p></#if>
+                <#if passwordChangeRequired><p class="text-warning text-center" style="margin-top:10px;">WARNING: Password change required</p></#if>
+            </form>
+        </div>
+
+        <#-- Optional SSO section (kept, but not in tabs). If you want it as a button too, say so. -->
+        <#if authFlowList?has_content && !authFlowList.isEmpty()>
+            <div style="margin-top:12px;">
+                <#list authFlowList as authFlow>
+                    <form method="post" action="/sso/login" class="form-signin" style="margin:0 0 8px 0;">
+                        <input type="hidden" name="authFlowId" value="${authFlow.authFlowId}">
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">${authFlow.description}</button>
+                    </form>
+                </#list>
+            </div>
+        </#if>
+    </div>
+</div>
+
+<#-- Reset Password Modal -->
+<div class="modal fade" id="resetPwModal" tabindex="-1" role="dialog" aria-labelledby="resetPwModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width:420px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="${ec.l10n.localize("Close")}"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="resetPwModalLabel">${ec.l10n.localize("Reset Password")}</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="${sri.buildUrl("resetPassword").url}" class="form-signin" id="reset_form" style="margin:0;">
+                    <p class="text-muted text-center">${ec.l10n.localize("Enter your username to email a reset password")}</p>
+                    <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
+                    <input type="hidden" name="initialTab" value="reset">
+                    <input id="reset_form_username" name="username" type="text" value="${(username!"")?html}"
+                            <#if username?has_content && secondFactorRequired>disabled="disabled"</#if>
+                            required="required" class="form-control"
+                            placeholder="${ec.l10n.localize("Username")}" aria-label="${ec.l10n.localize("Username")}">
+                    <button class="btn btn-lg btn-danger btn-block" type="submit" style="margin-top:10px;">
+                        ${ec.l10n.localize("Email Reset Password")}
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -139,7 +111,7 @@
             <form method="post" action="${sri.buildUrl("sendOtp").url}" class="form-signin">
                 <input type="hidden" name="factorId" value="${userAuthcFactor.factorId}">
                 <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
-                <input type="hidden" name="initialTab" class="initial-tab">
+                <input type="hidden" name="initialTab" class="initial-tab" value="login">
                 <button class="btn btn-lg btn-primary" type="submit">${ec.l10n.localize("Send code to")} ${userAuthcFactor.factorOption!}</button>
             </form>
         </div>
@@ -153,25 +125,54 @@
     </form>
 </#if>
 
+<style>
+/* password reveal inside the input */
+.password-wrap { position: relative; }
+.password-wrap .pw-field { padding-right: 2.25em; } /* room for the eye */
+.password-wrap .pw-reveal {
+position: absolute;
+right: 0.6em;
+top: 50%;
+transform: translateY(-50%);
+border: 0;
+background: transparent;
+padding: 0;
+line-height: 1;
+color: #777;
+cursor: pointer;
+}
+.password-wrap .pw-reveal:focus { outline: none; }
+.password-wrap .pw-reveal:hover { color: #333; }
+</style>
+
 <script>
 $(function () {
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        var $target = $(e.target);
-        window.location.hash = $target.attr('href');
-        var tabName = window.location.hash.slice(1);
-        $('.initial-tab').val(tabName);
-        $target.addClass("text-strong").removeClass("text-primary");
-        if (e.relatedTarget) $(e.relatedTarget).removeClass("text-strong").addClass("text-primary");
-        <#if username?has_content && secondFactorRequired>
-            if (tabName === "login") { $("#login_form_code").focus(); }
-            else if (tabName === "change") { $("#change_form_code").focus(); }
-            else if (tabName === "reset") { $("#reset_form_username").focus(); }
-        <#else>
-            if (tabName === "login") { $("#login_form_username").focus(); }
-            else if (tabName === "change") { $("#change_form_username").focus(); }
-            else if (tabName === "reset") { $("#reset_form_username").focus(); }
-        </#if>
-    });
-    $('a[href="' + (location.hash || '${initialTab!"#login"}') + '"]').tab('show');
-})
+// Default focus
+<#if username?has_content && secondFactorRequired>
+$("#login_form_code").focus();
+<#else>
+$("#login_form_username").focus();
+</#if>
+
+// When reset modal opens, focus username
+$('#resetPwModal').on('shown.bs.modal', function () {
+$("#reset_form_username").focus();
+});
+
+    // Password reveal toggles (works for all password fields wrapped in .password-wrap)
+    $(document).on("click", ".pw-reveal", function () {
+var $btn = $(this);
+var $wrap = $btn.closest(".password-wrap");
+var $pw = $wrap.find("input.pw-field").first();
+if (!$pw.length) return;
+
+var isHidden = $pw.attr("type") === "password";
+$pw.attr("type", isHidden ? "text" : "password");
+
+$btn.attr("title", isHidden ? "${ec.l10n.localize("Hide password")}" : "${ec.l10n.localize("Show password")}");
+$btn.attr("aria-label", isHidden ? "${ec.l10n.localize("Hide password")}" : "${ec.l10n.localize("Show password")}");
+$btn.find("i").toggleClass("fa-eye fa-eye-slash");
+$pw.trigger("focus");
+});
+});
 </script>
