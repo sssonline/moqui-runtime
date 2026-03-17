@@ -49,6 +49,10 @@
 
                 <#-- Links below login -->
                 <div class="text-center" style="margin-top:10px;">
+                    <button type="button" class="btn btn-link" data-toggle="modal" data-target="#forgotUsernameModal" style="padding:0;">
+                        ${ec.l10n.localize("Forgot Username")}
+                    </button>
+                    <span style="margin:0 10px; color:#ccc;">|</span>
                     <button type="button" class="btn btn-link" data-toggle="modal" data-target="#resetPwModal" style="padding:0;">
                         ${ec.l10n.localize("Reset Password")}
                     </button>
@@ -70,6 +74,31 @@
                 </#list>
             </div>
         </#if>
+    </div>
+</div>
+
+<#-- Forgot Username Modal -->
+<div class="modal fade" id="forgotUsernameModal" tabindex="-1" role="dialog" aria-labelledby="forgotUsernameModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width:420px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="${ec.l10n.localize("Close")}"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="forgotUsernameModalLabel">${ec.l10n.localize("Forgot Username")}</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="${sri.buildUrl("forgotUsername").url}" class="form-signin" id="forgot_username_form" style="margin:0;">
+                    <p class="text-muted text-center">${ec.l10n.localize("Enter your email address to receive your username")}</p>
+                    <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
+                    <input type="hidden" name="initialTab" value="login">
+                    <input id="forgot_form_email" name="userEmail" type="email" value="${(userEmail!"")?html}"
+                            required="required" class="form-control"
+                            placeholder="${ec.l10n.localize("Email Address")}" aria-label="${ec.l10n.localize("Email Address")}">
+                    <button class="btn btn-lg btn-danger btn-block" type="submit" style="margin-top:10px;">
+                        ${ec.l10n.localize("Email Username")}
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -157,6 +186,11 @@ $("#login_form_username").focus();
 // When reset modal opens, focus username
 $('#resetPwModal').on('shown.bs.modal', function () {
 $("#reset_form_username").focus();
+});
+
+    // When forgot username modal opens, focus email
+    $('#forgotUsernameModal').on('shown.bs.modal', function () {
+$("#forgot_form_email").focus();
 });
 
     // Password reveal toggles (works for all password fields wrapped in .password-wrap)
