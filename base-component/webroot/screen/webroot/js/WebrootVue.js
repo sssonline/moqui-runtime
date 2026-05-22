@@ -1038,7 +1038,7 @@ Vue.component('drop-down', {
         var jqEl = $(this.$el);
         var vm = this;
         var opts = { minimumResultsForSearch:10 };
-        if (this.combo) { opts.tags = true; opts.tokenSeparators = [',',' ']; }
+        if (this.combo) { opts.tags = true; opts.tokenSeparators = [',']; jqEl.addClass("noResetSelect2"); /* so container-dialog's modal-shown handler doesn't clobber tag mode on .select2({}). Space removed from separators so typed values like "Black Dalia" don't get prematurely committed; comma + enter/blur still commit. */ }
         if (this.multiple === "multiple") {
             opts.multiple = true; opts.closeOnSelect = false; opts.width = "100%";
             jqEl.css("min-width", "240px"); // this gets ignored, not sure why select2 isn't passing it through
@@ -1103,6 +1103,24 @@ Vue.component('drop-down', {
                 // TODO: if/when this is ever figured out, also add to on change listener in the watch => curData block below, and for the html render mode
             }
         });
+        if (this.combo) {
+            // Commit typed-but-not-yet-selected text when the dropdown closes (tab, click outside, etc).
+            // Select2's selectOnClose only fires when a result is highlighted, which isn't reliable in
+            // single-select tag mode — so handle it explicitly here.
+            jqEl.on('select2:closing', function() {
+                var $search = jqEl.parent().find('.select2-search__field');
+                var searchVal = $search.val();
+                if (searchVal && searchVal.length > 0) {
+                    var existing = jqEl.find('option').filter(function() { return this.value === searchVal; });
+                    if (existing.length === 0) {
+                        jqEl.append(new Option(searchVal, searchVal, true, true));
+                    } else {
+                        jqEl.val(searchVal);
+                    }
+                    jqEl.trigger('change');
+                }
+            });
+        }
         if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto" });
 
         // needed? was a hack for something, but interferes with closeOnSelect:false for multiple: .on('select2:select', function () { jqEl.select2('open').select2('close'); });
