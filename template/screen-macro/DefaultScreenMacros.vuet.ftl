@@ -1915,6 +1915,10 @@ a => A, d => D, y => Y
     <#assign tlId><@fieldId .node/></#assign>
     <#assign allowMultiple = ec.getResource().expandNoL10n(.node["@allow-multiple"]!, "") == "true">
     <#assign allowEmpty = ec.getResource().expandNoL10n(.node["@allow-empty"]!, "") == "true">
+    <#-- Project extension: allow-reorder enables click-and-drag chip reordering on multi-selects.
+         Only takes effect when allow-multiple is true. Drag-reorder handler lives in
+         runtime/component/basalt/screen/basaltstatic/js/common.js. -->
+    <#assign allowReorder = ec.getResource().expandNoL10n(.node["@allow-reorder"]!, "") == "true">
     <#assign prioritySearch = ec.getResource().expandNoL10n(.node["@priority-search"]!, "") == "true">
     <#assign isDynamicOptions = .node["dynamic-options"]?has_content>
     <#assign name><@fieldName .node/></#assign>
@@ -1947,7 +1951,7 @@ a => A, d => D, y => Y
         <#assign ignoreKey = false>
         <#assign initialLoad = false>
     </#if>
-    <drop-down name="${name}" id="${tlId}" class="<#if isDynamicOptions> dynamic-options</#if><#if .node["@style"]?has_content> ${ec.getResource().expandNoL10n(.node["@style"], "")}</#if><#if validationClasses?has_content> ${validationClasses}</#if>"<#rt>
+    <drop-down name="${name}" id="${tlId}" class="<#if isDynamicOptions> dynamic-options</#if><#if .node["@style"]?has_content> ${ec.getResource().expandNoL10n(.node["@style"], "")}</#if><#if allowReorder && allowMultiple> allow-reorder</#if><#if validationClasses?has_content> ${validationClasses}</#if>"<#rt>
             <#t><#if allowMultiple> multiple="multiple"</#if><#if allowEmpty> :allow-empty="true"</#if><#if prioritySearch> :priority-search="true"</#if><#if .node["@combo-box"]! == "true"> :combo="true"</#if>
             <#t><#if .node?parent["@tooltip"]?has_content> tooltip="${ec.getResource().expand(.node?parent["@tooltip"], "")}"</#if>
             <#t><#if ownerForm?has_content> form="${ownerForm}"</#if><#if .node["@size"]?has_content> size="${.node["@size"]}"</#if>

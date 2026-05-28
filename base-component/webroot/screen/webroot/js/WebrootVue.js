@@ -988,8 +988,14 @@ Vue.component('drop-down', {
     methods: {
         processOptionList: function(list, page, term) {
             var newData = [];
+            // Defensive: callers (notably the depends-on listener for multi-select dynamic-options)
+            // may pass term as an Array (the captured this.value). Coerce non-strings to '' so .trim()
+            // never throws "term.trim is not a function" and breaks the success handler.
+            var termStr = (typeof term === 'string') ? term : '';
             // funny case where select2 specifies no option.@value if empty so &nbsp; ends up passed with form submit; now filtered on server for \u00a0 only and set to null
-            if (this.allowEmpty && (!page || page <= 1) && (!term || term.trim() === '')) newData.push({ id:'\u00a0', text:'\u00a0' });
+            // Multi-select check mirrors the initial-mount logic below which already skips the
+            // leading blank for multiples \u2014 keeps the two code paths consistent.
+            if (this.allowEmpty && this.multiple !== "multiple" && (!page || page <= 1) && (!termStr || termStr.trim() === '')) newData.push({ id:'\u00a0', text:'\u00a0' });
             var labelField = this.labelField; if (!labelField) { labelField = "label"; }
             var valueField = this.valueField; if (!valueField) { valueField = "value"; }
             $.each(list, function(idx, curObj) {
