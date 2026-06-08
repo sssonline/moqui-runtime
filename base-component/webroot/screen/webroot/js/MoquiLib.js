@@ -525,6 +525,39 @@ if ($.fn.select2) {
     // custom event handler: programmatically trigger validation
     $(function() { $('.select2-hidden-accessible').on('select2:select', function(evt) { $(this).valid(); }); });
 
+    // combo-box (tags:true) fix: commit typed text when the user clicks outside the dropdown.
+    // Without this, Select2's selectOnClose path discards the search input value on outside-click
+    // for tag-enabled selects (tab / clicking a row already work via select2:select).
+    // Gated on opts.tags so non-combo selects are unaffected.
+    $(document).on('select2:closing', '.select2-hidden-accessible', function () {
+        var $sel = $(this);
+        var s2 = $sel.data('select2');
+        if (!s2 || !s2.options || !s2.options.options || !s2.options.options.tags) return;
+        // For single-select, the search input lives in the floating dropdown ($dropdown.$search);
+        // for multi-select, it lives in the selection container. Try both, plus the live DOM.
+        var $search = $();
+        if (s2.dropdown && s2.dropdown.$search && s2.dropdown.$search.length) { $search = s2.dropdown.$search; }
+        if (!$search.length && s2.$dropdown) { $search = s2.$dropdown.find('.select2-search__field'); }
+        if (!$search.length) { $search = s2.$container.find('.select2-search__field'); }
+        if (!$search.length) { $search = $('.select2-container--open .select2-search__field'); }
+        var term = ($search.val() || '').trim();
+        if (!term) return;
+        var termLc = term.toLowerCase();
+        var matchedVal = null;
+        $sel.find('option').each(function () {
+            var t = ($(this).text() || '').toLowerCase();
+            var v = ($(this).val()  || '').toLowerCase();
+            if (t === termLc || v === termLc) { matchedVal = $(this).val(); return false; }
+        });
+        if (matchedVal !== null) {
+            // Existing option — select it if not already selected
+            if ($sel.val() !== matchedVal) { $sel.val(matchedVal).trigger('change'); }
+        } else {
+            // New tag — append and select
+            $sel.append(new Option(term, term, true, true)).trigger('change');
+        }
+    });
+
     if ($.fn.modal) {
         // this is a fix for Select2 search input within Bootstrap Modal
         $.fn.modal.Constructor.prototype.enforceFocus = function() {};
