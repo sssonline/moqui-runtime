@@ -650,7 +650,7 @@ Vue.component('m-form', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top'});
+        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', container:'body'});
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name^="' + this.focusField + '"]').addClass('default-focus').focus();
         // watch changed fields
         jqEl.find(':input').on('change', this.fieldChange);
@@ -727,7 +727,7 @@ Vue.component('form-link', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top'});
+        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', container:'body'});
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name=' + this.focusField + ']').addClass('default-focus').focus();
     }
 });

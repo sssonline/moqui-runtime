@@ -1561,6 +1561,8 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#if formNode["@focus-field"]?has_content>
         <m-script>$("#${formId}_table").find('[name="${formNode["@focus-field"]}<#if isMulti && !formListInfo.hasFirstRow()>_0</#if>"][form="${formId}<#if formListInfo.hasFirstRow()>_first<#elseif !isMulti>_0</#if>"]').addClass('default-focus').focus();</m-script>
     </#if>
+    <#-- initialize Bootstrap tooltips on form-list cells; row inputs use HTML5 form-association so they sit outside m-form/form-link and miss those components' own tooltip init -->
+    <m-script>$("#${formId}_table").find('[data-toggle="tooltip"]').tooltip({placement:'auto top', container:'body'});</m-script>
     <#if hasSubColumns><m-script>moqui.makeColumnsConsistent('${formId}_table');</m-script></#if>
 </#if>
     <#if sri.doBoundaryComments()><!-- END   form-list[@name=${formName}] --></#if>

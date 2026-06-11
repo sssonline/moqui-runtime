@@ -193,6 +193,8 @@ ul.float-plain.condensed li { margin: 0 4px 0 0; padding: 4px; }
 .diagram-sequence-actor { font-size: larger; font-weight: bold; margin-bottom: 14px; border-top: rgb(127, 127, 127) solid 1px; border-bottom: rgb(127, 127, 127) solid 1px; }
 
 /* misc library styles */
+/* Bootstrap tooltip default z-index is 1070; Quasar layout chrome (q-header, q-drawer, q-dialog, etc.) uses z-index up to 9998, so unboosted tooltips render behind Quasar elements even when appended to <body> via container:'body'. Bump above Quasar's range. */
+.tooltip { z-index:10000 !important; }
 /* simplemde */
 .editor-toolbar.fullscreen { z-index:100!important; top:50px!important; }
 .CodeMirror-fullscreen, .editor-preview-side { z-index:100!important; top:100px!important; }
