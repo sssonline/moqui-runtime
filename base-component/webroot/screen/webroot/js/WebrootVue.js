@@ -370,7 +370,7 @@ Vue.component('container-dialog', {
                     if ($select2Container.length) {
                         $select2Container.attr('title', titleText);
                         $select2Container.attr('data-original-title', titleText);
-                        $select2Container.tooltip({ trigger: 'hover', container: 'body' });
+                        $select2Container.tooltip({ trigger: 'hover', container: 'body' }).on('click', function(){ $(this).tooltip('hide'); });
                     }
                 }
             });
@@ -650,7 +650,7 @@ Vue.component('m-form', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'});
+        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'}).on('click', function(){ $(this).tooltip('hide'); });
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name^="' + this.focusField + '"]').addClass('default-focus').focus();
         // watch changed fields
         jqEl.find(':input').on('change', this.fieldChange);
@@ -727,7 +727,7 @@ Vue.component('form-link', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'});
+        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'}).on('click', function(){ $(this).tooltip('hide'); });
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name=' + this.focusField + ']').addClass('default-focus').focus();
     }
 });
@@ -935,7 +935,7 @@ Vue.component('date-time', {
 
             jqEl.val(jqEl.find("input").first().val());
 
-            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" });
+            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" }).on('click', function(){ $(this).tooltip('hide'); });
         } else {
             jqEl.datetimepicker({toolbarPlacement:'top', debug:false, showClose:true, showClear:true, showTodayButton:true, useStrict:true,
                 defaultDate:(value && value.length ? moment(value,this.formatVal) : null), format:format,
@@ -951,7 +951,7 @@ Vue.component('date-time', {
 
             jqEl.val(jqEl.find("input").first().val());
 
-            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" });
+            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" }).on('click', function(){ $(this).tooltip('hide'); });
         }
         if (format === "YYYY-MM-DD") { jqEl.find('input').inputmask("yyyy-mm-dd", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
         if (format === "YYYY-MM-DD HH:mm") { jqEl.find('input').inputmask("yyyy-mm-dd hh:mm", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
@@ -1127,7 +1127,7 @@ Vue.component('drop-down', {
                 }
             });
         }
-        if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" });
+        if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" }).on('click', function(){ $(this).tooltip('hide'); });
 
         // needed? was a hack for something, but interferes with closeOnSelect:false for multiple: .on('select2:select', function () { jqEl.select2('open').select2('close'); });
         // needed? caused some issues: .on('change', function () { vm.$emit('input', vm.curVal); })
@@ -1157,7 +1157,7 @@ Vue.component('drop-down', {
             jqEl.select2('destroy'); jqEl.empty();
             this.s2Opts.data = options;
             jqEl.select2(this.s2Opts).on('change', function () { vm.$emit('input', this.value); });
-            if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" });
+            if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" }).on('click', function(){ $(this).tooltip('hide'); });
             if (wasFocused) jqEl.focus();
             setTimeout(function() {
                 var setVal = vm.lastVal; if (!setVal || setVal.length < 2) { setVal = vm.value; }
@@ -1604,10 +1604,10 @@ moqui.webrootVue = new Vue({
     },
     mounted: function() {
         var jqEl = $(this.$el);
-        jqEl.find('.navbar [data-toggle="tooltip"]').tooltip({ placement:'bottom', trigger:'hover' });
-        jqEl.find('#history-menu-link').tooltip({ placement:'bottom', trigger:'hover' });
-        jqEl.find('#notify-history-menu-link').tooltip({ placement:'bottom', trigger:'hover' });
-        jqEl.find('#document-menu-link').tooltip({ placement:'bottom', trigger:'hover' });
+        jqEl.find('.navbar [data-toggle="tooltip"]').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
+        jqEl.find('#history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
+        jqEl.find('#notify-history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
+        jqEl.find('#document-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
         // load the current screen
         this.setUrl(window.location.pathname + window.location.search);
         // init the NotificationClient and register 'displayNotify' as the default listener
