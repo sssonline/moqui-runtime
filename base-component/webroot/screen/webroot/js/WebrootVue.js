@@ -935,7 +935,7 @@ Vue.component('date-time', {
 
             jqEl.val(jqEl.find("input").first().val());
 
-            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto" });
+            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" });
         } else {
             jqEl.datetimepicker({toolbarPlacement:'top', debug:false, showClose:true, showClear:true, showTodayButton:true, useStrict:true,
                 defaultDate:(value && value.length ? moment(value,this.formatVal) : null), format:format,
@@ -951,7 +951,7 @@ Vue.component('date-time', {
 
             jqEl.val(jqEl.find("input").first().val());
 
-            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto" });
+            if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" });
         }
         if (format === "YYYY-MM-DD") { jqEl.find('input').inputmask("yyyy-mm-dd", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
         if (format === "YYYY-MM-DD HH:mm") { jqEl.find('input').inputmask("yyyy-mm-dd hh:mm", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
@@ -1127,7 +1127,7 @@ Vue.component('drop-down', {
                 }
             });
         }
-        if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto" });
+        if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" });
 
         // needed? was a hack for something, but interferes with closeOnSelect:false for multiple: .on('select2:select', function () { jqEl.select2('open').select2('close'); });
         // needed? caused some issues: .on('change', function () { vm.$emit('input', vm.curVal); })
@@ -1157,7 +1157,7 @@ Vue.component('drop-down', {
             jqEl.select2('destroy'); jqEl.empty();
             this.s2Opts.data = options;
             jqEl.select2(this.s2Opts).on('change', function () { vm.$emit('input', this.value); });
-            if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto" });
+            if (this.tooltip && this.tooltip.length) jqEl.next().tooltip({ title: function() { return $(this).prev().attr("data-title"); }, placement: "auto", trigger: "hover", container: "body" });
             if (wasFocused) jqEl.focus();
             setTimeout(function() {
                 var setVal = vm.lastVal; if (!setVal || setVal.length < 2) { setVal = vm.value; }
