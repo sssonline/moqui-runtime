@@ -2145,7 +2145,7 @@ moqui.webrootVue = new Vue({
         reLoginShow:false, reLoginPassword:null, reLoginMfaData:null, reLoginOtp:null,
         notificationClient:null, sessionTokenBc:null, qzVue:null, leftOpen:false, moqui:moqui },
     methods: {
-        setUrl: function(url, bodyParameters, onComplete) {
+        setUrl: function(url, bodyParameters, onComplete, skipHistoryPush) {
             // cancel current load if needed
             if (this.currentLoadRequest) {
                 console.log("Aborting current page load currentLinkUrl " + this.currentLinkUrl + " url " + url);
@@ -2192,8 +2192,14 @@ moqui.webrootVue = new Vue({
                     }
                 }});
 
-                // set the window URL
-                window.history.pushState(null, this.ScreenTitle, url);
+                // set the window URL; when this call is a result of the browser's own back/forward
+                // navigation (popstate) or the initial page load, the history entry already exists
+                // so use replaceState to avoid pushing a duplicate entry that corrupts the back/forward stack
+                if (skipHistoryPush) {
+                    window.history.replaceState(null, this.ScreenTitle, url);
+                } else {
+                    window.history.pushState(null, this.ScreenTitle, url);
+                }
                 // notify url listeners
                 this.urlListeners.forEach(function(callback) { callback(url, this) }, this);
                 // scroll to top
@@ -2569,7 +2575,7 @@ moqui.webrootVue = new Vue({
         var jqEl = $(this.$el);
         jqEl.css("display", "initial");
         // load the current screen
-        this.setUrl(window.location.pathname + window.location.search);
+        this.setUrl(window.location.pathname + window.location.search, null, null, true);
         // init the NotificationClient and register 'displayNotify' as the default listener
         this.notificationClient.registerListener("ALL");
 
@@ -2589,7 +2595,7 @@ moqui.webrootVue = new Vue({
     }
 
 });
-window.addEventListener('popstate', function() { moqui.webrootVue.setUrl(window.location.pathname + window.location.search); });
+window.addEventListener('popstate', function() { moqui.webrootVue.setUrl(window.location.pathname + window.location.search, null, null, true); });
 
 // NOTE: simulate vue-router so this.$router.resolve() works in a basic form; required for use of q-btn 'to' attribute along with router-link component defined above
 moqui.webrootRouter = {
@@ -2606,7 +2612,7 @@ moqui.webrootRouter = {
             hash:location.hash||"", query:location.query||"", params: {}, fullPath:path, matched:[] };
         return { location:location, route:route, href:moqui.makeHref(location), normalizedTo:location, resolved:route }
     },
-    replace: function(location, onComplete, onAbort) { moqui.webrootVue.setUrl(location, null, onComplete); },
+    replace: function(location, onComplete, onAbort) { moqui.webrootVue.setUrl(location, null, onComplete, true); },
     push: function(location, onComplete, onAbort) { moqui.webrootVue.setUrl(location, null, onComplete); }
 }
 Object.defineProperty(Vue.prototype, '$router', {

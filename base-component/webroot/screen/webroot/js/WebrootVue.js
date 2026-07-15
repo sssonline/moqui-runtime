@@ -1307,7 +1307,7 @@ moqui.webrootVue = new Vue({
         lastNavTime:Date.now(), loading:0, currentLoadRequest:null, activeContainers:{}, urlListeners:[],
         moquiSessionToken:"", appHost:"", appRootPath:"", userId:"", locale:"en", notificationClient:null, qzVue:null },
     methods: {
-        setUrl: function(url, bodyParameters) {
+        setUrl: function(url, bodyParameters, skipHistoryPush) {
             // make sure any open modals are closed before setting current URL
             $('.modal.in').modal('hide');
             // cancel current load if needed
@@ -1360,8 +1360,14 @@ moqui.webrootVue = new Vue({
                     }
                 }});
 
-                // set the window URL
-                window.history.pushState(null, this.ScreenTitle, url);
+                // set the window URL; when this call is a result of the browser's own back/forward
+                // navigation (popstate) or the initial page load, the history entry already exists
+                // so use replaceState to avoid pushing a duplicate entry that corrupts the back/forward stack
+                if (skipHistoryPush) {
+                    window.history.replaceState(null, this.ScreenTitle, url);
+                } else {
+                    window.history.pushState(null, this.ScreenTitle, url);
+                }
                 // notify url listeners
                 this.urlListeners.forEach(function(callback) { callback(url, this) }, this);
                 // scroll to top
@@ -1608,8 +1614,8 @@ moqui.webrootVue = new Vue({
         jqEl.find('#history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
         jqEl.find('#notify-history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
         jqEl.find('#document-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
-        // load the current screen
-        this.setUrl(window.location.pathname + window.location.search);
+        // load the current screen; skip pushing a new history entry since we're just syncing to the URL already loaded
+        this.setUrl(window.location.pathname + window.location.search, null, true);
         // init the NotificationClient and register 'displayNotify' as the default listener
         this.notificationClient.registerListener("ALL");
 
@@ -1632,4 +1638,4 @@ moqui.webrootVue = new Vue({
     }
 
 });
-window.addEventListener('popstate', function() { moqui.webrootVue.setUrl(window.location.pathname + window.location.search); });
+window.addEventListener('popstate', function() { moqui.webrootVue.setUrl(window.location.pathname + window.location.search, null, true); });
