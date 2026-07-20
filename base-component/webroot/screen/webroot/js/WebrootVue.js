@@ -352,7 +352,7 @@ Vue.component('container-dialog', {
     methods: { hide: function() { $(this.$el).modal('hide'); } },
     mounted: function() {
         var jqEl = $(this.$el); var vm = this;
-        jqEl.on("hidden.bs.modal", function() { vm.isHidden = true; });
+        jqEl.on("hidden.bs.modal", function() { vm.isHidden = true; $('body > div.tooltip').remove(); });
         jqEl.on("shown.bs.modal", function() {
             vm.isHidden = false;
 
@@ -437,7 +437,7 @@ Vue.component('dynamic-dialog', {
     mounted: function() {
         this.$root.addContainer(this.id, this); var jqEl = $(this.$el); var vm = this;
         jqEl.on("show.bs.modal", function() { vm.curUrl = vm.url; });
-        jqEl.on("hidden.bs.modal", function() { vm.isHidden = true; vm.curUrl = ""; });
+        jqEl.on("hidden.bs.modal", function() { vm.isHidden = true; vm.curUrl = ""; $('body > div.tooltip').remove(); });
         jqEl.on("shown.bs.modal", function() { vm.isHidden = false; });
         if (this.openDialog) { jqEl.modal('show'); }
     }
@@ -1310,6 +1310,9 @@ moqui.webrootVue = new Vue({
         setUrl: function(url, bodyParameters, skipHistoryPush) {
             // make sure any open modals are closed before setting current URL
             $('.modal.in').modal('hide');
+            // remove any orphaned Bootstrap tooltips left in the body when their trigger element was
+            // destroyed by Vue without firing a mouseleave (SPA teardown leaves container:'body' tips behind)
+            $('body > div.tooltip').remove();
             // cancel current load if needed
             if (this.currentLoadRequest) {
                 console.log("Aborting current page load currentLinkUrl " + this.currentLinkUrl + " url " + url);
