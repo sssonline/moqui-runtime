@@ -584,7 +584,7 @@ Vue.component('m-form', {
             var notified = false;
             // console.info('m-form response ' + JSON.stringify(resp));
             if (resp && moqui.isPlainObject(resp)) {
-                notified = moqui.notifyMessages(resp.messageInfos, resp.errors);
+                notified = moqui.notifyMessages(resp.messageInfos, resp.errors, resp.validationErrors);
                 if (resp.screenUrl && resp.screenUrl.length > 0) { this.$root.setUrl(resp.screenUrl); }
                 else if (resp.redirectUrl && resp.redirectUrl.length > 0) { window.location.href = resp.redirectUrl; }
             } else { console.warn('m-form no response or non-JSON response: ' + JSON.stringify(resp)) }
