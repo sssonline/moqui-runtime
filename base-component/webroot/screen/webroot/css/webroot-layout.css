@@ -18,6 +18,9 @@ html, body, #apps-root { height: 100%; }
 #apps-footer-content { margin-top: 4px; text-align: center; }
 
 #dynamic-menus .glyphicon, #dynamic-menus .fa { top: 0; font-size: 10px; }
+/* split breadcrumb: title link and caret dropdown toggle sit side by side in one li */
+#dynamic-menus .breadcrumb-split-link { display: inline-block; padding-right: 2px; }
+#dynamic-menus .breadcrumb-split-toggle { display: inline-block; padding-left: 2px; }
 #navbar-buttons .btn .label { top: -2px; }
 #notify-history-menu ul { min-width: 500px; }
 #notify-history-menu li { padding: 8px; }

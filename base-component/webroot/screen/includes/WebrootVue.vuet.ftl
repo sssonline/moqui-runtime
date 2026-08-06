@@ -43,8 +43,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <template v-if="menuIndex < (navMenuList.length - 1)">
                         <m-link v-if="navMenuItem.hasTabMenu" :href="getNavHref(menuIndex)">{{navMenuItem.title}} <i class="fa fa-chevron-right"></i></m-link>
                         <template v-else-if="navMenuItem.subscreens && navMenuItem.subscreens.length > 1">
-                            <#-- use chevron-right if has subscreens menu, thicker arrow to distinguish -->
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{navMenuItem.title}} <i class="fa fa-chevron-right"></i></a>
+                            <#-- split breadcrumb: title navigates directly (default subscreen = dashboard), caret opens the subscreens menu -->
+                            <m-link :href="getNavHref(menuIndex)" class="breadcrumb-split-link">{{navMenuItem.title}}</m-link>
+                            <a href="#" class="dropdown-toggle breadcrumb-split-toggle" data-toggle="dropdown"><i class="fa fa-caret-down"></i> <i class="fa fa-chevron-right"></i></a>
                             <ul class="dropdown-menu">
                                 <li v-for="subscreen in navMenuItem.subscreens" :class="{active:subscreen.active}">
                                     <m-link :href="subscreen.pathWithParams">
