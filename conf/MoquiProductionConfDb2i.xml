@@ -7,6 +7,11 @@
 
     <server-stats stats-skip-condition="pathInfo?.startsWith('/rpc') || pathInfo?.startsWith('/rest') || pathInfo?.startsWith('/status')"/>
 
+    <!-- no password expiry (0 = never require change; framework default is 104 weeks) -->
+    <user-facade>
+        <password change-weeks="0"/>
+    </user-facade>
+
     <!-- NOTE: using the environment variable is relatively secure in a container environment, but for more security set it here instead -->
     <entity-facade query-stats="true">
         <!-- add datasource elements here to configure databases -->
