@@ -953,6 +953,23 @@ Vue.component('date-time', {
 
             if (this.tooltip && this.tooltip.length) jqEl.tooltip({ title: this.tooltip, placement: "auto", trigger: "hover", container: "body" }).on('click', function(){ $(this).tooltip('hide'); });
         }
+        // The picker widget renders nested beside the input, so any overflow:auto/hidden ancestor
+        // (panel-body, dialogs, grid cells) clips it. This library version's widgetParent option can't
+        // target body (its place() throws when no non-static ancestor exists), so instead move the
+        // freshly-built widget to body on every open and position it with document-relative offsets.
+        // Safe with the library lifecycle: hide() works on its retained widget reference and rebuilds
+        // per open, and the widget's mousedown guard (blur prevention) travels with the node. z-index
+        // above bootstrap modals (1050) so pickers inside container-dialogs stay on top.
+        jqEl.on('dp.show', function() {
+            var widget = jqEl.find('.bootstrap-datetimepicker-widget').last();
+            if (!widget.length) return;
+            var offset = jqEl.offset(); var css = { 'z-index': 1100, bottom: 'auto', right: 'auto' };
+            if (widget.hasClass('top')) { css.top = (offset.top - widget.outerHeight()) + 'px'; }
+            else { css.top = (offset.top + jqEl.outerHeight()) + 'px'; }
+            var left = widget.hasClass('pull-right') ? (offset.left + jqEl.outerWidth() - widget.outerWidth()) : offset.left;
+            css.left = Math.max(4, Math.min(left, $(window).width() - widget.outerWidth() - 4)) + 'px';
+            widget.appendTo('body').css(css);
+        });
         if (format === "YYYY-MM-DD") { jqEl.find('input').inputmask("yyyy-mm-dd", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
         if (format === "YYYY-MM-DD HH:mm") { jqEl.find('input').inputmask("yyyy-mm-dd hh:mm", { clearIncomplete:false, clearMaskOnLostFocus:true, showMaskOnFocus:true, showMaskOnHover:false, removeMaskOnSubmit:false }); }
     }
