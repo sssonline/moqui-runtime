@@ -339,8 +339,10 @@ Vue.component('box-body', {
 Vue.component('container-dialog', {
     props: { id:{type:String,required:true}, title:String, width:{type:String,'default':'760'}, openDialog:{type:Boolean,'default':false} },
     data: function() {
-        var viewportWidth = $(window).width();
-        return { isHidden:true, dialogStyle:{width:(this.width < viewportWidth ? this.width : viewportWidth) + 'px'}}},
+        // $(window).width() can read 0 when the component is created during a detached/hidden render
+        // pass; without the fallback every dialog created then gets width:0px and renders as a sliver
+        var viewportWidth = $(window).width() || window.innerWidth || 9999;
+        return { isHidden:true, dialogStyle:{width:(parseInt(this.width) < viewportWidth ? this.width : viewportWidth) + 'px'}}},
     template:
     '<div :id="id" class="modal dynamic-dialog" aria-hidden="true" style="display:none;" tabindex="-1">' +
         '<div class="modal-dialog" :style="dialogStyle"><div class="modal-content">' +
@@ -398,8 +400,9 @@ Vue.component('dynamic-dialog', {
     props: { id:{type:String,required:true}, url:{type:String,required:true}, title:String, width:{type:String,'default':'760'},
         openDialog:{type:Boolean,'default':false}, dynamicParams:{type:Object,'default':null} },
     data: function() {
-        var viewportWidth = $(window).width();
-        return { curComponent:moqui.EmptyComponent, curUrl:"", isHidden:true, dialogStyle:{width:(this.width < viewportWidth ? this.width : viewportWidth) + 'px'}}},
+        // same 0-width guard as container-dialog above
+        var viewportWidth = $(window).width() || window.innerWidth || 9999;
+        return { curComponent:moqui.EmptyComponent, curUrl:"", isHidden:true, dialogStyle:{width:(parseInt(this.width) < viewportWidth ? this.width : viewportWidth) + 'px'}}},
     template:
     '<div :id="id" class="modal dynamic-dialog" aria-hidden="true" style="display: none;" tabindex="-1">' +
         '<div class="modal-dialog" :style="dialogStyle"><div class="modal-content">' +

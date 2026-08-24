@@ -1899,7 +1899,11 @@ a => A, d => D, y => Y
             <#list depNodeList as depNode>
             $("#<@fieldIdByName depNode["@field"]/>").on('change', function() { populate_${dispFieldId}(); });
             </#list>
-            <#-- <#if !fieldValue?has_content>populate_${dispFieldId}();</#if> -->
+            <#-- initial populate so a dialog opened with prefilled depends-on values (e.g. a Transaction
+                 Date defaulting to today) shows its resolved display immediately — without this the
+                 field stays blank until the user manually changes a dependency (the html macro variant
+                 has always made this call). populate itself returns early when a dependency is empty. -->
+            <#if !fieldValue?has_content>populate_${dispFieldId}();</#if>
         </m-script>
     </#if>
 </#macro>
