@@ -529,8 +529,20 @@ if ($.fn.select2) {
     // Without this, Select2's selectOnClose path discards the search input value on outside-click
     // for tag-enabled selects (tab / clicking a row already work via select2:select).
     // Gated on opts.tags so non-combo selects are unaffected.
+    // #911: when the close is caused by an actual selection (click/enter on a result), the search
+    // text is still in the field and this commit used to overwrite the just-clicked option with the
+    // raw typed term. select2:selecting is the pre-event guaranteed to bubble here before the close
+    // chain starts (the jQuery select2:select event only relays AFTER close in select2 4.0.3), so
+    // stamp a flag on it and skip the commit; reset on open so type-then-click-outside still commits.
+    $(document).on('select2:selecting', '.select2-hidden-accessible', function () {
+        $(this).data('comboJustSelected', true);
+    });
+    $(document).on('select2:open', '.select2-hidden-accessible', function () {
+        $(this).removeData('comboJustSelected');
+    });
     $(document).on('select2:closing', '.select2-hidden-accessible', function () {
         var $sel = $(this);
+        if ($sel.data('comboJustSelected')) { $sel.removeData('comboJustSelected'); return; }
         var s2 = $sel.data('select2');
         if (!s2 || !s2.options || !s2.options.options || !s2.options.options.tags) return;
         // For single-select, the search input lives in the floating dropdown ($dropdown.$search);

@@ -1133,7 +1133,17 @@ Vue.component('drop-down', {
             // Commit typed-but-not-yet-selected text when the dropdown closes (tab, click outside, etc).
             // Select2's selectOnClose only fires when a result is highlighted, which isn't reliable in
             // single-select tag mode — so handle it explicitly here.
+            // When the close is caused by an actual selection (click or enter on a result), the search
+            // text is still in the field — committing that raw text would overwrite the selection just
+            // made (#911). Flag on select2:selecting: it is the cancellable PRE event, guaranteed to fire
+            // before the internal select processing that closes the dropdown (the jQuery select2:select
+            // event can arrive AFTER select2:closing in this select2 build, so it can't be the flag).
+            // Reset on open so a later type-then-click-outside still commits typed text.
+            var comboJustSelected = false;
+            jqEl.on('select2:open', function() { comboJustSelected = false; });
+            jqEl.on('select2:selecting select2:select', function() { comboJustSelected = true; });
             jqEl.on('select2:closing', function() {
+                if (comboJustSelected) return;
                 var $search = jqEl.parent().find('.select2-search__field');
                 var searchVal = $search.val();
                 if (searchVal && searchVal.length > 0) {
