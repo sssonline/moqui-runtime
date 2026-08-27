@@ -1531,7 +1531,9 @@ moqui.webrootVue = new Vue({
             return esc;
         },
         getNavHref: function(navIndex) {
-            if (!navIndex) navIndex = this.navMenuList.length - 1;
+            // explicit null/undefined check: index 0 (the Applications root) is a valid index, a falsy
+            // check resolved it to the current screen and re-rendered it, wiping unsubmitted form input
+            if (navIndex == null) navIndex = this.navMenuList.length - 1;
             var navMenu = this.navMenuList[navIndex];
             if (navMenu.extraPathList && navMenu.extraPathList.length) {
                 var href = navMenu.path + '/' + navMenu.extraPathList.join('/');

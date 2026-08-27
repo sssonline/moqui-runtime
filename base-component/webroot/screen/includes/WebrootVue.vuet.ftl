@@ -41,11 +41,11 @@ along with this software (see the LICENSE.md file). If not, see
             <ul id="dynamic-menus" class="nav navbar-nav">
                 <li v-for="(navMenuItem, menuIndex) in navMenuList" class="dropdown">
                     <template v-if="menuIndex < (navMenuList.length - 1)">
-                        <m-link v-if="navMenuItem.hasTabMenu" :href="getNavHref(menuIndex)">{{navMenuItem.title}} <i class="fa fa-chevron-right"></i></m-link>
-                        <template v-else-if="navMenuItem.subscreens && navMenuItem.subscreens.length > 1">
-                            <#-- split breadcrumb: title navigates directly (default subscreen = dashboard), caret opens the subscreens menu -->
+                        <template v-if="navMenuItem.subscreens && navMenuItem.subscreens.length > 1 && !navMenuItem.hasTabMenu">
+                            <#-- split breadcrumb: title navigates directly (default subscreen = dashboard), the > separator opens the subscreens menu -->
                             <m-link :href="getNavHref(menuIndex)" class="breadcrumb-split-link">{{navMenuItem.title}}</m-link>
-                            <a href="#" class="dropdown-toggle breadcrumb-split-toggle" data-toggle="dropdown"><i class="fa fa-caret-down"></i> <i class="fa fa-chevron-right"></i></a>
+                            <a href="#" class="dropdown-toggle breadcrumb-sep breadcrumb-sep-toggle" data-toggle="dropdown" data-tooltip="true"
+                               :data-original-title="navMenuItem.title + ' subscreens'" :aria-label="navMenuItem.title + ' subscreens'"><i class="fa fa-chevron-right"></i></a>
                             <ul class="dropdown-menu">
                                 <li v-for="subscreen in navMenuItem.subscreens" :class="{active:subscreen.active}">
                                     <m-link :href="subscreen.pathWithParams">
@@ -57,7 +57,11 @@ along with this software (see the LICENSE.md file). If not, see
                                         {{subscreen.title}}</m-link></li>
                             </ul>
                         </template>
-                        <m-link v-else :href="getNavHref(menuIndex)">{{navMenuItem.title}} <i class="fa fa-chevron-right"></i></m-link>
+                        <template v-else>
+                            <m-link :href="getNavHref(menuIndex)" class="breadcrumb-split-link">{{navMenuItem.title}}</m-link>
+                            <#-- separator whose left-hand level has no subscreens menu: inert decoration, no href so it never navigates -->
+                            <a class="breadcrumb-sep breadcrumb-sep-inert" tabindex="-1" aria-hidden="true"><i class="fa fa-chevron-right"></i></a>
+                        </template>
                     </template>
                 </li>
             </ul>
