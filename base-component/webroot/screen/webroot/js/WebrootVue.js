@@ -653,7 +653,6 @@ Vue.component('m-form', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'}).on('click', function(){ $(this).tooltip('hide'); });
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name^="' + this.focusField + '"]').addClass('default-focus').focus();
         // watch changed fields
         jqEl.find(':input').on('change', this.fieldChange);
@@ -730,7 +729,6 @@ Vue.component('form-link', {
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
-        jqEl.find('[data-toggle="tooltip"]').tooltip({placement:'auto top', trigger:'hover', container:'body'}).on('click', function(){ $(this).tooltip('hide'); });
         if (this.focusField && this.focusField.length > 0) jqEl.find('[name=' + this.focusField + ']').addClass('default-focus').focus();
     }
 });
@@ -1330,6 +1328,31 @@ Vue.component('subscreens-active', {
     }},
     mounted: function() { this.$root.addSubscreen(this); }
 });
+// Tooltips app-wide: one delegated Bootstrap init instead of per-component/per-form inits. Any element with
+// data-toggle="tooltip", or with data-tooltip (for elements whose data-toggle is taken, e.g. dropdown/modal
+// triggers), gets the standard tooltip on hover. Per-element title/data-original-title supplies the text.
+moqui.tipSweepTimer = null;
+// remove any body-attached tooltip whose owner element is gone or hidden; Bootstrap ties them together via
+// aria-describedby, and Vue teardown/re-render destroys owners without firing the mouseleave that would hide the tip
+moqui.sweepOrphanTips = function() {
+    var tipList = document.querySelectorAll('body > div.tooltip');
+    for (var ti = 0; ti < tipList.length; ti++) {
+        var tipEl = tipList[ti];
+        var owner = tipEl.id ? document.querySelector('[aria-describedby="' + tipEl.id + '"]') : null;
+        if (!owner || !owner.getClientRects().length) $(tipEl).remove();
+    }
+    if (moqui.tipSweepTimer !== null && !document.querySelector('body > div.tooltip')) {
+        clearInterval(moqui.tipSweepTimer); moqui.tipSweepTimer = null; }
+};
+$(document.body).tooltip({ selector: '[data-toggle="tooltip"], [data-tooltip]', trigger: 'hover', container: 'body',
+    placement: function(tipEl, triggerEl) { return $(triggerEl).closest('.navbar').length ? 'bottom' : 'auto top'; } });
+// sweep only while a tooltip is open: self-stopping interval started on show, cleared when none remain
+$(document.body).on('shown.bs.tooltip', function() {
+    if (moqui.tipSweepTimer === null) moqui.tipSweepTimer = setInterval(moqui.sweepOrphanTips, 500); });
+// hide on click (opens dialogs, submits, navigates); read the instance directly so an un-hovered element doesn't get
+// a default-options instance created just to hide it
+$(document.body).on('click', '[data-toggle="tooltip"], [data-tooltip]', function() {
+    var tt = $(this).data('bs.tooltip'); if (tt) tt.hide(); });
 moqui.webrootVue = new Vue({
     el: '#apps-root',
     data: { basePath:"", linkBasePath:"", currentPathList:[], extraPathList:[], activeSubscreens:[], currentParameters:{}, bodyParameters:null,
@@ -1643,10 +1666,7 @@ moqui.webrootVue = new Vue({
     },
     mounted: function() {
         var jqEl = $(this.$el);
-        jqEl.find('.navbar [data-toggle="tooltip"]').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
-        jqEl.find('#history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
-        jqEl.find('#notify-history-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
-        jqEl.find('#document-menu-link').tooltip({ placement:'bottom', trigger:'hover' }).on('click', function(){ $(this).tooltip('hide'); });
+        // navbar tooltips come from the app-wide delegated init (data-toggle="tooltip" or data-tooltip markers)
         // load the current screen; skip pushing a new history entry since we're just syncing to the URL already loaded
         this.setUrl(window.location.pathname + window.location.search, null, true);
         // init the NotificationClient and register 'displayNotify' as the default listener

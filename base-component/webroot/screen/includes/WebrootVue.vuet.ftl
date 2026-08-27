@@ -69,7 +69,7 @@ along with this software (see the LICENSE.md file). If not, see
             <#-- screen history menu -->
             <#-- get initial history from server? <#assign screenHistoryList = ec.web.getScreenHistory()><#list screenHistoryList as screenHistory><#if (screenHistory_index >= 25)><#break></#if>{url:pathWithParams, name:title}</#list> -->
             <div id="history-menu" class="nav navbar-right dropdown">
-                <a id="history-menu-link" href="#" class="dropdown-toggle btn btn-default btn-sm navbar-btn" data-toggle="dropdown" title="${ec.l10n.localize("Screen History")}">
+                <a id="history-menu-link" href="#" class="dropdown-toggle btn btn-default btn-sm navbar-btn" data-toggle="dropdown" data-tooltip="true" data-original-title="${ec.l10n.localize("Screen History")}">
                     <i class="fa fa-bars"></i></a>
                 <ul class="dropdown-menu">
                     <li v-for="histItem in navHistoryList"><m-link :href="histItem.pathWithParams">
@@ -88,7 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
             -->
             <#-- notify history -->
             <div id="notify-history-menu" class="nav navbar-right dropdown">
-                <a id="notify-history-menu-link" href="#" class="dropdown-toggle btn btn-default btn-sm navbar-btn" data-toggle="dropdown" title="${ec.l10n.localize("Notify History")}">
+                <a id="notify-history-menu-link" href="#" class="dropdown-toggle btn btn-default btn-sm navbar-btn" data-toggle="dropdown" data-tooltip="true" data-original-title="${ec.l10n.localize("Notify History")}">
                     <i class="fa fa-exclamation-circle"></i></a>
                 <ul class="dropdown-menu" @click.prevent="stopProp">
                     <li v-for="histItem in notifyHistoryList">
@@ -111,7 +111,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <#-- screen documentation/help -->
             <div id="document-menu" class="nav navbar-right dropdown" :class="{hidden:!documentMenuList.length}">
-                <a id="document-menu-link" href="#" class="dropdown-toggle btn btn-info btn-sm navbar-btn" data-toggle="dropdown" title="Documentation">
+                <a id="document-menu-link" href="#" class="dropdown-toggle btn btn-info btn-sm navbar-btn" data-toggle="dropdown" data-tooltip="true" data-original-title="Documentation">
                     <i class="fa fa-question-circle"></i></a>
                 <ul class="dropdown-menu">
                     <li v-for="screenDoc in documentMenuList">
