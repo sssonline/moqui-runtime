@@ -2380,6 +2380,11 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 
 <#if !mlInitExpr?has_content && mlDefault?has_content>
 <#assign mlInitExpr = mlDefault>
+<#-- a numeric default must also seed the submitted JSON: the hidden is what posts, and
+     leaving it result:null meant an untouched default (e.g. quantity 1) submitted empty -->
+<#if mlDefault?matches("^-?\\d+(\\.\\d+)?$")>
+<#assign mlInitHidden = '{"percentMode":false,"result":' + mlDefault + ',"percentResults":[]}' >
+</#if>
 </#if>
 
 <div class="math-line-wrap<#if mlClass?has_content> ${mlClass}</#if>" id="${mlId}">
