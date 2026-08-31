@@ -2392,6 +2392,18 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 <#if mlTitle?has_content><strong v-pre>${mlTitle?html}</strong></#if>
 <#if mlPrefix?has_content><span v-pre>${mlPrefix?html}</span></#if>
 
+<#-- percent toggle BEFORE the input: these fields sit in right-aligned columns, and with the button
+     trailing, the right-aligned column header landed over the button instead of the entry field the
+     user types into while saved rows aligned under the input (card #920) -->
+<#if mlPercentCapable>
+<button type="button"
+class="btn btn-outline-secondary math-line-percent-btn"
+aria-pressed="false"
+data-toggle="tooltip"
+title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">%
+</button>
+</#if>
+
 <input type="text"
 id="${mlId}_expr"
 name="${mlFieldName?html}_expr"
@@ -2423,16 +2435,6 @@ data-ml-lookup-url="${mlLookupUrl?html}"
 data-ml-params-json="${mlParamsJson?html}"
 </#if>
 />
-
-<#-- percent toggle button -->
-<#if mlPercentCapable>
-<button type="button"
-class="btn btn-outline-secondary math-line-percent-btn"
-aria-pressed="false"
-data-toggle="tooltip"
-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">%
-</button>
-</#if>
 
 <#-- what gets submitted: ALWAYS map JSON -->
 <input type="hidden"
