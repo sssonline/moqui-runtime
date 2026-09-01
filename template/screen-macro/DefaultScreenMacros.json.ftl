@@ -135,6 +135,19 @@ on the same screen to increase reusability of those screens -->
         <#t></#list>
     <#t></#list>]
     </@compress>
+    <#-- per-column type hints for the XLSX exporter (card #943): "text" columns are identifiers
+         and must never be coerced to numbers no matter what their values look like; "auto" keeps
+         the exporter's value sniffing. Emitted in the same iteration as "columns" so the two
+         arrays are positionally aligned by construction. -->
+    <#assign fieldPrinted = false>
+    <@compress single_line=true>
+    <#t>,"colTypes": [
+    <#t><#list formListColumnList as columnFieldList>
+        <#t><#list columnFieldList as fieldNode>
+            <#t><@jsonValue formListColType(fieldNode)/>
+        <#t></#list>
+    <#t></#list>]
+    </@compress>
     <#assign fieldPrinted = false>
     <#if formListColumnList?size &gt; 0 && listObject?size &gt; 0><#t>,</#if>
     <#if listObject?size &gt; 0><#t>"data":[</#if>
@@ -167,6 +180,32 @@ on the same screen to increase reusability of those screens -->
     </#if>
     <#t><@fieldTitle fieldSubNode/>
 </#macro>
+<#-- Export type hint for one form-list column (card #943): "text" = identifier, never coerce;
+     "auto" = let the exporter's value sniffing decide (today's behavior). Conservative on
+     purpose: only returns "text" on signals that mark a column as identifier-shaped. -->
+<#function formListColType fieldNode>
+    <#-- the app's explicit numeric-column conventions win: right-aligned/totaled columns are
+         genuinely numeric even when a widget below would read as text -->
+    <#if (fieldNode["@align"]! == "right") || fieldNode["@show-total"]?has_content><#return "auto"></#if>
+    <#if fieldNode["default-field"]?has_content>
+        <#local dNode = fieldNode["default-field"][0]>
+    <#elseif fieldNode["conditional-field"]?has_content>
+        <#local dNode = fieldNode["conditional-field"][0]>
+    <#else>
+        <#return "auto">
+    </#if>
+    <#-- links and entity descriptions are identifiers/names even when all digits (pseudoId) -->
+    <#if dNode["link"]?has_content || dNode["display-entity"]?has_content><#return "text"></#if>
+    <#-- a display with numeric formatting is a number column; leave it to the sniffing -->
+    <#if dNode["display"]?has_content>
+        <#local dispNode = dNode["display"][0]>
+        <#if dispNode["@currency-unit-field"]?has_content || dispNode["@format"]?has_content><#return "auto"></#if>
+    </#if>
+    <#-- entity field type where the form declares one: id and text types export as text -->
+    <#local vType = (formInstance.getFieldValidateNode(dNode)["@type"])!"">
+    <#if vType == "id" || vType == "id-long" || vType?starts_with("text-")><#return "text"></#if>
+    <#return "auto">
+</#function>
 <#macro formListSubField fieldNode>
     <#list fieldNode["conditional-field"] as fieldSubNode>
         <#if ec.resource.condition(fieldSubNode["@condition"], "")>

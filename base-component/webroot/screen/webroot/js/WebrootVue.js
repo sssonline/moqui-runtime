@@ -649,7 +649,14 @@ Vue.component('m-form', {
     mounted: function() {
         var vm = this;
         var jqEl = $(this.$el);
+        // ignore: name-less, never-validatable form controls (select2/selectivity/typeahead search
+        // inputs, plain buttons) so the MoquiLib elements() override doesn't console.error "has no
+        // name assigned" for each on every valid() call (card #913). ':hidden' is the plugin default
+        // and MUST stay first: setting ignore REPLACES the default rather than extending it. No
+        // validation change — a control without a name has no rules and was always filtered out
+        // right after the warning. contenteditable deliberately not ignored (the override names it).
         if (!this.noValidate) jqEl.validate({ errorClass: 'help-block', errorElement: 'span',
+            ignore: ':hidden, input:not([name]), button:not([name]), select:not([name]), textarea:not([name])',
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });
@@ -725,7 +732,9 @@ Vue.component('form-link', {
     },
     mounted: function() {
         var jqEl = $(this.$el);
+        // same ignore as m-form above (card #913): find-form submits hit the same unconditional warn
         if (!this.noValidate) jqEl.validate({ errorClass: 'help-block', errorElement: 'span',
+            ignore: ':hidden, input:not([name]), button:not([name]), select:not([name]), textarea:not([name])',
             highlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-success').addClass('has-error'); },
             unhighlight: function(element, errorClass, validClass) { $(element).parents('.form-group').removeClass('has-error').addClass('has-success'); }
         });

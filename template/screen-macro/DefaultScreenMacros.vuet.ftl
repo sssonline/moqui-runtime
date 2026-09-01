@@ -2358,7 +2358,9 @@ ${sri.getFieldValueString(.node)?html}</textarea>
                 <#assign _k = _kv[0]?trim>
                 <#assign _vName = _kv[1]?trim>
                 <#assign _vVal = (ec.context.get(_vName))!"" >
-                <#assign _json = _json + "\"" + (_k?json_string) + "\":\"" + ((_vVal?string)?json_string) + "\"" >
+                <#-- ?c for numbers: ?string locale-groups 1000 as "1,000" (card #947) -->
+                <#assign _vStr = _vVal?is_number?then(_vVal?c, _vVal?string)>
+                <#assign _json = _json + "\"" + (_k?json_string) + "\":\"" + (_vStr?json_string) + "\"" >
 <#if _p_has_next><#assign _json = _json + ","></#if>
 </#if>
 </#list>
@@ -2373,8 +2375,11 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 
 <#if mlCtxVal?has_content>
 <#if mlCtxVal?is_number>
-<#assign mlInitExpr = mlCtxVal?string>
-<#assign mlInitHidden = '{"percentMode":false,"result":' + (mlCtxVal?string) + ',"percentResults":[]}' >
+<#-- ?c, not ?string: ?string applies locale grouping, so a saved 1000 seeded the input as "1,000"
+     (which the formula tokenizer choked on) and corrupted the hidden JSON ("result":1,000) — every
+     math-line value of 1000+ failed to round-trip through an edit form (card #947) -->
+<#assign mlInitExpr = mlCtxVal?c>
+<#assign mlInitHidden = '{"percentMode":false,"result":' + (mlCtxVal?c) + ',"percentResults":[]}' >
 <#elseif mlCtxVal?is_string>
 <#assign _sv = mlCtxVal?trim>
 <#if _sv?starts_with("{")>
@@ -2399,18 +2404,6 @@ ${sri.getFieldValueString(.node)?html}</textarea>
 <div class="math-line-top">
 <#if mlTitle?has_content><strong v-pre>${mlTitle?html}</strong></#if>
 <#if mlPrefix?has_content><span v-pre>${mlPrefix?html}</span></#if>
-
-<#-- percent toggle BEFORE the input: these fields sit in right-aligned columns, and with the button
-     trailing, the right-aligned column header landed over the button instead of the entry field the
-     user types into while saved rows aligned under the input (card #920) -->
-<#if mlPercentCapable>
-<button type="button"
-class="btn btn-outline-secondary math-line-percent-btn"
-aria-pressed="false"
-data-toggle="tooltip"
-title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">%
-</button>
-</#if>
 
 <input type="text"
 id="${mlId}_expr"
@@ -2443,6 +2436,18 @@ data-ml-lookup-url="${mlLookupUrl?html}"
 data-ml-params-json="${mlParamsJson?html}"
 </#if>
 />
+
+<#-- percent toggle AFTER the input (card #945, refining #920): the trailing position is where the
+     operator expects the mode toggle; the right-aligned column heading is kept over the input by
+     the header-side .aspen-mathline-num-header offset class rather than by moving this button -->
+<#if mlPercentCapable>
+<button type="button"
+class="btn btn-default math-line-percent-btn"
+aria-pressed="false"
+data-toggle="tooltip"
+title="Toggle percent mode: compute this expression as a percent of the selected item(s) and submit results for each selection.">%
+</button>
+</#if>
 
 <#-- what gets submitted: ALWAYS map JSON -->
 <input type="hidden"
