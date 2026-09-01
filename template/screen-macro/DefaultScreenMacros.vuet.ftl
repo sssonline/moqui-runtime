@@ -143,15 +143,17 @@ ${sri.renderSectionInclude(.node)}
 </#macro>
 
 <#macro "container-dialog">
+    <#-- icon="" (present but empty) suppresses the button icon entirely; an absent icon attribute
+         keeps the default (card #937: dialog buttons had no no-icon option, unlike links) -->
     <#assign iconClass = "fa fa-external-link">
-    <#if .node["@icon"]?has_content><#assign iconClass = .node["@icon"]></#if>
+    <#if .node["@icon"]??><#assign iconClass = .node["@icon"]></#if>
     <#if .node["@condition"]?has_content><#assign conditionResult = ec.getResource().condition(.node["@condition"], "")><#else><#assign conditionResult = true></#if>
     <#if conditionResult>
         <#assign buttonText = ec.getResource().expand(.node["@button-text"], "")>
         <#assign title = ec.getResource().expand(.node["@title"], "")>
         <#if !title?has_content><#assign title = buttonText></#if>
         <#assign cdDivId><@nodeId .node/></#assign>
-        <button id="${cdDivId}-button" type="button" data-toggle="modal" data-target="#${cdDivId}" data-original-title="${buttonText}" data-placement="bottom" class="btn btn-${ec.getResource().expandNoL10n(.node["@type"]!"primary", "")} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><i class="${iconClass}"></i> ${buttonText}</button>
+        <button id="${cdDivId}-button" type="button" data-toggle="modal" data-target="#${cdDivId}" data-original-title="${buttonText}" data-placement="bottom" class="btn btn-${ec.getResource().expandNoL10n(.node["@type"]!"primary", "")} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><#if iconClass?has_content><i class="${iconClass}"></i> </#if>${buttonText}</button>
         <container-dialog id="${cdDivId}" width="${.node["@width"]!"760"}" title="${title}"<#if _openDialog! == cdDivId> :openDialog="true"</#if>>
             <#recurse>
         </container-dialog>
@@ -163,21 +165,22 @@ ${sri.renderSectionInclude(.node)}
     <dynamic-container id="${dcDivId}" url="${urlInstance.passThroughSpecialParameters().urlWithParams}"></dynamic-container>
 </#macro>
 <#macro "dynamic-dialog">
-    <#assign iconClass = "fa fa-external-link">
-    <#if .node["@icon"]?has_content><#assign iconClass = .node["@icon"]></#if>
+    <#-- icon="" (present but empty) suppresses the button icon entirely; an absent icon attribute
+         keeps the default (card #937: the hardcoded share icon had no opt-out, so the Shipment
+         Detail stepper's "Set Shipped" dialog button could not match its bare sibling buttons) -->
     <#if .node["@condition"]?has_content><#assign conditionResult = ec.getResource().condition(.node["@condition"], "")><#else><#assign conditionResult = true></#if>
     <#if conditionResult>
         <#assign iconClass = "glyphicon glyphicon-share">
-        <#if .node["@icon"]?has_content><#assign iconClass = .node["@icon"]></#if>
+        <#if .node["@icon"]??><#assign iconClass = .node["@icon"]></#if>
         <#assign buttonText = ec.getResource().expand(.node["@button-text"], "")>
         <#assign title = ec.getResource().expand(.node["@title"], "")>
         <#if !title?has_content><#assign title = buttonText></#if>
         <#assign urlInstance = sri.makeUrlByType(.node["@transition"], "transition", .node, "true")>
         <#assign ddDivId><@nodeId .node/></#assign>
         <#if urlInstance.disableLink>
-            <button id="${ddDivId}-button" name="${ddDivId}-button" type="button" class="disabled text-muted btn btn-${.node["@type"]!"primary"} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><i class="${iconClass}"></i> ${buttonText}</button>
+            <button id="${ddDivId}-button" name="${ddDivId}-button" type="button" class="disabled text-muted btn btn-${.node["@type"]!"primary"} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><#if iconClass?has_content><i class="${iconClass}"></i> </#if>${buttonText}</button>
         <#else>
-            <button id="${ddDivId}-button" name="${ddDivId}-button" type="button" data-toggle="modal" data-target="#${ddDivId}" data-original-title="${buttonText}" data-placement="bottom" class="btn btn-${.node["@type"]!"primary"} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><i class="${iconClass}"></i> ${buttonText}</button>
+            <button id="${ddDivId}-button" name="${ddDivId}-button" type="button" data-toggle="modal" data-target="#${ddDivId}" data-original-title="${buttonText}" data-placement="bottom" class="btn btn-${.node["@type"]!"primary"} btn-sm ${ec.getResource().expandNoL10n(.node["@button-style"]!"", "")}"><#if iconClass?has_content><i class="${iconClass}"></i> </#if>${buttonText}</button>
             <#assign afterFormText>
             <dynamic-dialog id="${ddDivId}" url="${urlInstance.urlWithParams}" width="${.node["@width"]!"760"}" title="${title}"<#if _openDialog! == ddDivId> :openDialog="true"</#if>></dynamic-dialog>
             </#assign>
@@ -1741,9 +1744,14 @@ ${sri.renderIncludeScreen(.node["@location"], .node["@share-scope"]!)}
     <#elseif .node["@type"]! == "date"><#assign size=10><#assign maxlength=10><#assign defaultFormat="yyyy-MM-dd">
     <#else><#assign size=16><#assign maxlength=23><#assign defaultFormat="yyyy-MM-dd HH:mm">
     </#if>
+    <#-- own format, never inherited: #assign is template-scoped, so before this fix the javaFormat
+         left over from whichever date-time macro rendered LAST on the page decided this widget's
+         format prop — a date-only find could mount showing "00:00" (card #899). Honors @format
+         (documented in the XSD, previously ignored here), else the type default above. -->
+    <#assign javaFormat = .node["@format"]!defaultFormat>
     <#assign curFieldName><@fieldName .node/></#assign>
-    <#assign fieldValueFrom = ec.getL10n().format(ec.getContext().get(curFieldName + "_from")!?default(.node["@default-value-from"]!""), defaultFormat)>
-    <#assign fieldValueThru = ec.getL10n().format(ec.getContext().get(curFieldName + "_thru")!?default(.node["@default-value-thru"]!""), defaultFormat)>
+    <#assign fieldValueFrom = ec.getL10n().format(ec.getContext().get(curFieldName + "_from")!?default(.node["@default-value-from"]!""), javaFormat)>
+    <#assign fieldValueThru = ec.getL10n().format(ec.getContext().get(curFieldName + "_thru")!?default(.node["@default-value-thru"]!""), javaFormat)>
     <span class="form-date-find">
       <span>${ec.getL10n().localize("From")}&nbsp;</span>
       <date-time id="<@fieldId .node/>_from" name="${curFieldName}_from" value="${fieldValueFrom?html}" type="${.node["@type"]!""}" size="${.node["@size"]!""}"<#rt>

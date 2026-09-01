@@ -874,11 +874,11 @@ Vue.component('date-time', {
         size:String, format:String, tooltip:String, form:String, required:String, autoYear:String, autoMonth:String, minuteStep:{type:Number,'default':5 } },
     template:
     '<div v-if="type==\'time\'" class="input-group time" :id="id">' +
-        '<input type="text" class="form-control" :pattern="timePattern" :id="id?(id+\'_itime\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form">' +
+        '<input type="text" class="form-control" :pattern="timePattern" :id="id?(id+\'_itime\'):\'\'" :name="name" :value="displayVal" :size="sizeVal" :form="form">' +
         '<span class="input-group-addon"><span class="fa fa-clock-o"></span></span>' +
     '</div>' +
     '<div v-else class="input-group date" :id="id">' +
-        '<input ref="dateInput" @focus="focusDate" @blur="blurDate" type="text" class="form-control" :id="id?(id+\'_idate\'):\'\'" :name="name" :value="value" :size="sizeVal" :form="form" :required="required == \'required\' ? true : false">' +
+        '<input ref="dateInput" @focus="focusDate" @blur="blurDate" type="text" class="form-control" :id="id?(id+\'_idate\'):\'\'" :name="name" :value="displayVal" :size="sizeVal" :form="form" :required="required == \'required\' ? true : false">' +
         '<span class="input-group-addon"><span class="fa fa-calendar"></span></span>' +
     '</div>',
     methods: {
@@ -912,6 +912,21 @@ Vue.component('date-time', {
     computed: {
         formatVal: function() { var format = this.format; if (format && format.length > 0) { return format; }
             return this.type === 'time' ? 'HH:mm' : (this.type === 'date' ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH:mm'); },
+        // what the input actually renders (card #899): the incoming value re-formatted to formatVal.
+        // The raw value can carry a time a type="date" field must not show ("2026-08-09 00:00" — a
+        // String value bypasses server-side formatting), and the picker runs useStrict so an input it
+        // cannot parse is BLANKED on mount, not reformatted. Parse leniently against the display
+        // format plus the common server shapes and re-format; the displayed value is also what posts,
+        // so a type="date" field genuinely posts date-only (the framework parses "YYYY-MM-DD" fine).
+        // An unparseable value falls through unchanged, same as before.
+        displayVal: function() {
+            var value = this.value;
+            if (!value || !value.length) return value;
+            var parseFormats = [this.formatVal].concat(this.extraFormatsVal,
+                ['YYYY-MM-DD HH:mm:ss.S', 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm', 'YYYY-MM-DD', moment.ISO_8601]);
+            var m = moment(value, parseFormats);
+            return m.isValid() ? m.format(this.formatVal) : value;
+        },
         extraFormatsVal: function() { return this.type === 'time' ? ['LT', 'LTS', 'HH:mm'] :
             (this.type === 'date' ? ['l', 'L', 'YYYY-MM-DD'] : ['YYYY-MM-DD HH:mm', 'YYYY-MM-DD HH:mm:ss', 'MM/DD/YYYY HH:mm']); },
         sizeVal: function() { var size = this.size; if (size && size.length > 0) { return size; }
