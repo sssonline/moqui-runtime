@@ -7,7 +7,7 @@
     <#--   Tab is replaced with \t              -->
     <#--   Double quote is replaced with \"     -->
     <#--   Backslash is replaced with \\        -->
-    <#t><#if textValue??><#if fieldPrinted!false>,</#if><#assign fieldPrinted = true>"${textValue?replace("\n", "\\n")?replace("\r", "\\r")?replace("\t", "\\t")?replace("\"", "\\\"")?replace("\\", "\\\\")}"</#if>
+    <#t><#if textValue??><#if fieldPrinted!false>,</#if><#assign fieldPrinted = true><#assign cellsEmitted = (cellsEmitted!0) + 1>"${textValue?replace("\n", "\\n")?replace("\r", "\\r")?replace("\t", "\\t")?replace("\"", "\\\"")?replace("\\", "\\\\")}"</#if>
 </#macro>
 
 <#macro @element><#-- do nothing for unknown elements --></#macro>
@@ -144,7 +144,7 @@ on the same screen to increase reusability of those screens -->
     <#t>,"colTypes": [
     <#t><#list formListColumnList as columnFieldList>
         <#t><#list columnFieldList as fieldNode>
-            <#t><@jsonValue formListColType(fieldNode)/>
+            <#t><#if formListColEmits(fieldNode)><@jsonValue formListColType(fieldNode)/></#if>
         <#t></#list>
     <#t></#list>]
     </@compress>
@@ -169,7 +169,23 @@ on the same screen to increase reusability of those screens -->
     </@compress>
     ${sri.safeCloseList(listObject)}<#t><#-- if listObject is an EntityListIterator, close it -->
 </#macro>
+<#-- does this column ever emit a data cell? Mirrors formListWidget's skip rules exactly, so
+     headers, colTypes, and data cells stay positionally aligned by construction: hidden fields
+     and submit-only control columns (Find/Edit buttons) drop out of ALL THREE instead of leaving
+     a header with no cells under it (the old header/data mismatch). -->
+<#function formListColEmits fieldNode>
+    <#if fieldNode["@hide"]! == "true"><#return false></#if>
+    <#if fieldNode["conditional-field"]?has_content><#return true></#if>
+    <#if fieldNode["default-field"]?has_content>
+        <#local dNode = fieldNode["default-field"][0]>
+        <#if dNode["ignored"]?has_content || dNode["hidden"]?has_content || dNode["submit"]?has_content><#return false></#if>
+        <#return true>
+    </#if>
+    <#-- header-field only (e.g. a find button column): never a data cell -->
+    <#return false>
+</#function>
 <#macro formListHeaderField fieldNode>
+    <#if !formListColEmits(fieldNode)><#return></#if>
     <#if fieldNode["header-field"]?has_content>
         <#assign fieldSubNode = fieldNode["header-field"][0]>
     <#elseif fieldNode["default-field"]?has_content>
@@ -207,16 +223,22 @@ on the same screen to increase reusability of those screens -->
     <#return "auto">
 </#function>
 <#macro formListSubField fieldNode>
+    <#-- skip the same columns the header skips, emit exactly ONE cell for everything else: a
+         null value or non-rendering widget used to emit nothing, shifting every later cell in
+         the row one column left under the wrong header (null-shift fix) -->
+    <#if !formListColEmits(fieldNode)><#return></#if>
+    <#local cellsBefore = cellsEmitted!0>
     <#list fieldNode["conditional-field"] as fieldSubNode>
         <#if ec.resource.condition(fieldSubNode["@condition"], "")>
             <#t><@formListWidget fieldSubNode/>
+            <#if (cellsEmitted!0) == cellsBefore><#t><@jsonValue ""/></#if>
             <#return>
         </#if>
     </#list>
     <#if fieldNode["default-field"]?has_content>
         <#t><@formListWidget fieldNode["default-field"][0]/>
-        <#return>
     </#if>
+    <#if (cellsEmitted!0) == cellsBefore><#t><@jsonValue ""/></#if>
 </#macro>
 <#macro formListWidget fieldSubNode>
     <#if fieldSubNode["ignored"]?has_content || fieldSubNode["hidden"]?has_content || fieldSubNode["submit"]?has_content><#return/></#if>
