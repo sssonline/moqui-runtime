@@ -2327,6 +2327,24 @@ ${sri.getFieldValueString(.node)?html}</textarea>
         <#assign mlId><@fieldId .node/></#assign>
     </#if>
 
+    <#-- pretty label for client-side error growls (card #947): prefer the form-field's visible
+         column/label title (header-field, else default-field), fall back to the widget @title
+         or the prettified field name -->
+    <#assign mlPrettyTitle = mlTitle>
+    <#if !mlPrettyTitle?has_content>
+        <#assign _mlSubNode = .node?parent!>
+        <#if _mlSubNode?has_content && ((_mlSubNode?parent?node_name)!"") == "field">
+            <#assign _mlFieldNode = _mlSubNode?parent>
+            <#if _mlFieldNode["header-field"]?has_content>
+                <#assign mlPrettyTitle><@fieldTitle _mlFieldNode["header-field"][0]/></#assign>
+            <#elseif _mlFieldNode["default-field"]?has_content>
+                <#assign mlPrettyTitle><@fieldTitle _mlFieldNode["default-field"][0]/></#assign>
+            <#else>
+                <#assign mlPrettyTitle><@fieldTitle _mlSubNode/></#assign>
+            </#if>
+        </#if>
+    </#if>
+
     <#-- Percent enabled only if ALL required attributes present -->
     <#assign mlPercentCapable =
         (mlDependsOn?has_content && mlTargetEntity?has_content && mlTargetKeyField?has_content &&
@@ -2418,6 +2436,10 @@ autocapitalize="off" autocomplete="off"
 <#if mlTooltip?has_content> data-toggle="tooltip" title="${mlTooltip?html}"</#if>
 
 data-ml-field="${mlFieldName?html}"
+<#-- jquery-validate hook: blocks m-form/form-link saves while the entry is invalid (card #947);
+     the "mathline" method is registered by the math-line block in basalt common.js -->
+data-rule-mathline="true"
+<#if mlPrettyTitle?trim?has_content> data-ml-title="${mlPrettyTitle?trim?html}"</#if>
 data-ml-decimals="${mlDecimals?html}"
 data-ml-show-result="${mlShowResult?html}"
 data-ml-rounding="${mlRounding?html}"
